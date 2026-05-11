@@ -1,0 +1,418 @@
+.page-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    background-color: var(--green-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background-color 0.18s, transform 0.1s;
+    box-shadow: 0 2px 8px rgba(45,158,45,0.25);
+}
+
+.btn-primary:hover {
+    background-color: var(--green-dark);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.summary-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.summary-card {
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.summary-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.summary-card-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.summary-card-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.table-panel {
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+/* ==========================================================
+   TOOLBAR
+   ========================================================== */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Toolbar search */
+.toolbar-search {
+    max-width: 200px;
+    min-width: 140px;
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+}
+
+/* Filter select */
+.filter-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 32px 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--white);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.18s;
+    white-space: nowrap;
+}
+
+.filter-select:focus {
+    border-color: var(--green-primary);
+    box-shadow: 0 0 0 3px rgba(45,158,45,0.10);
+}
+
+.filter-select-arrow {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+    color: var(--text-muted);
+}
+
+/* Export Button */
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--white);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.18s, border-color 0.18s;
+    white-space: nowrap;
+}
+
+.btn-export:hover {
+    background-color: var(--bg-main);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+
+/* ==========================================================
+   NASABAH TABLE SPECIFICS
+   ========================================================== */
+.nasabah-table {
+    min-width: 900px; /* horizontal scroll pada layar kecil */
+}
+
+.nasabah-table thead th {
+    padding: 12px 14px;
+    background-color: #FAFAFA;
+}
+
+.nasabah-table tbody td {
+    padding: 14px 14px;
+}
+
+.col-check {
+    width: 40px;
+    text-align: center;
+}
+
+.col-aksi {
+    text-align: center;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--green-primary);
+}
+
+/* Kontak Cell */
+.kontak-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.kontak-email {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.kontak-phone {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+/* Poin Cell */
+.poin-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.poin-value {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Sampah Cell */
+.sampah-cell {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.sampah-cell .unit {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Status Badge – Nasabah */
+.status-badge.aktif    { background-color: #ECFDF5; color: #059669; }
+.status-badge.nonaktif { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.baru     { background-color: #EFF6FF; color: #2563EB; }
+
+/* Bergabung Cell */
+.bergabung-cell {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ==========================================================
+   ACTION BUTTONS (kolom Aksi)
+   ========================================================== */
+.aksi-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-aksi {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s, transform 0.1s;
+}
+
+.btn-aksi:active {
+    transform: scale(0.92);
+}
+
+/* Detail – abu */
+.btn-detail {
+    background-color: #F3F4F6;
+    color: #6B7280;
+}
+
+.btn-detail:hover {
+    background-color: #E5E7EB;
+    color: #374151;
+}
+
+/* Edit – biru */
+.btn-edit {
+    background-color: #EFF6FF;
+    color: #3B82F6;
+}
+
+.btn-edit:hover {
+    background-color: #DBEAFE;
+    color: #2563EB;
+}
+
+/* Delete – merah */
+.btn-delete {
+    background-color: #FEF2F2;
+    color: #EF4444;
+}
+
+.btn-delete:hover {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+/* ==========================================================
+   TABLE FOOTER & PAGINATION
+   ========================================================== */
+.table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.table-info {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.table-info strong {
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: auto;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--white);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.page-btn:hover:not(:disabled) {
+    background-color: var(--bg-main);
+    border-color: var(--green-primary);
+    color: var(--green-primary);
+}
+
+.page-btn.active {
+    background-color: var(--green-primary);
+    border-color: var(--green-primary);
+    color: var(--white);
+}
+
+.page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.page-btn.page-prev,
+.page-btn.page-next {
+    padding: 0 12px;
+    font-size: 12.5px;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    user-select: none;
+}

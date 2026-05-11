@@ -1,0 +1,286 @@
+/* ================================================================
+   kategori-sampah.css
+   Extends style.css — token sama dengan nasabah.css / kelola-reward.css
+   SolusiSampah Admin Panel
+   ================================================================ */
+
+/* ── Page Title Row ─────────────────────────────────────────────── */
+.ks-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Tambah Kategori button — same as nasabah btn-primary */
+.ks-btn-tambah {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    background-color: var(--green-primary);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(45,158,45,0.25);
+    transition: background-color 0.18s, transform 0.1s;
+}
+
+.ks-btn-tambah:hover  { background-color: var(--green-dark); }
+.ks-btn-tambah:active { transform: scale(0.98); }
+
+/* ── Summary Cards Row ──────────────────────────────────────────── */
+.ks-summary-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.ks-summary-card {
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--border-color);
+    transition: box-shadow 0.18s;
+}
+
+.ks-summary-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.ks-summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ks-summary-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.ks-val-gold { color: #F59E0B; }
+
+.ks-summary-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* ── Table Panel ────────────────────────────────────────────────── */
+.ks-table-panel {
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────── */
+.ks-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+}
+
+/* Search */
+.ks-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    flex: 1;
+    max-width: 280px;
+    transition: border-color 0.15s;
+}
+
+.ks-search-wrap:focus-within { border-color: var(--green-primary); }
+
+.ks-search-wrap .search-input {
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text-primary);
+    width: 100%;
+    background: transparent;
+    font-family: inherit;
+}
+
+/* Filter selects */
+.ks-filter-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.ks-filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 30px 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--white);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    white-space: nowrap;
+}
+
+.ks-filter-select:focus { border-color: var(--green-primary); }
+
+.ks-select-chevron {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+}
+
+/* ── Table ──────────────────────────────────────────────────────── */
+.ks-table { min-width: 800px; }
+
+/* Column widths */
+.ks-th-ikon   { width: 60px;  text-align: center; }
+.ks-th-nama   { min-width: 160px; }
+.ks-th-poin   { width: 110px; text-align: center; }
+.ks-th-desc   { min-width: 200px; }
+.ks-th-vol    { width: 120px; text-align: right; }
+.ks-th-status { width: 90px;  text-align: center; }
+.ks-th-aksi   { width: 110px; text-align: center; }
+
+/* Thead background */
+.ks-table thead tr { background-color: #FAFAFA; }
+.ks-table thead th { padding: 10px 14px; }
+.ks-table tbody td { padding: 14px 14px; }
+
+/* Ikon cell */
+.ks-td-ikon { text-align: center; }
+
+.ks-ikon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ks-ikon-wrap.blue   { background: linear-gradient(135deg,#60A5FA,#3B82F6); }
+.ks-ikon-wrap.yellow { background: linear-gradient(135deg,#FBBF24,#D97706); }
+.ks-ikon-wrap.gray   { background: linear-gradient(135deg,#9CA3AF,#6B7280); }
+.ks-ikon-wrap.teal   { background: linear-gradient(135deg,#34D399,#059669); }
+.ks-ikon-wrap.purple { background: linear-gradient(135deg,#A78BFA,#7C3AED); }
+.ks-ikon-wrap.red    { background: linear-gradient(135deg,#F87171,#DC2626); }
+
+/* Nama & kode */
+.ks-nama {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.ks-kode {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+/* Poin badge */
+.ks-td-poin {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.ks-poin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #FEF3C7;
+    color: #92400E;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    letter-spacing: -0.01em;
+}
+
+.ks-poin-unit {
+    display: block;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 3px;
+    text-align: center;
+}
+
+/* Deskripsi */
+.ks-td-desc {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    max-width: 260px;
+}
+
+/* Volume */
+.ks-td-vol {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Status */
+.ks-td-status { text-align: center; }
+
+/* Aksi */
+.ks-td-aksi { text-align: center; }
+
+/* Override btn-aksi sizes to match screenshot (icon-only + icon+text) */
+.ks-table .btn-detail {
+    background-color: #F3F4F6;
+    color: #6B7280;
+}
+
+.ks-table .btn-detail:hover {
+    background-color: #E5E7EB;
+    color: #374151;
+}
+
+.ks-table .btn-edit {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.ks-table .btn-edit:hover { background-color: #FDE68A; }
+
+.ks-table .btn-delete {
+    background-color: #FEF2F2;
+    color: #DC2626;
+}
+
+.ks-table .btn-delete:hover { background-color: #FEE2E2; }

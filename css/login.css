@@ -1,0 +1,439 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+.login {
+  width: 100%;
+  position: relative;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 102px;
+  line-height: normal;
+  letter-spacing: normal;
+}
+.background {
+  height: 1024px;
+  position: relative;
+  background-color: #2d9e5c;
+  min-width: 730px;
+  max-width: 100%;
+}
+.logo-area,
+.splash-screen-parent {
+  flex-direction: column;
+  max-width: 100%;
+}
+.logo-area {
+  width: 506px;
+  display: flex;
+  align-items: flex-start;
+  padding: 136px 0 0;
+  box-sizing: border-box;
+  text-align: left;
+  font-size: 20px;
+  color: #000;
+  font-family: Poppins;
+}
+.splash-screen-parent {
+  align-self: stretch;
+  gap: 43px;
+}
+.graphic-area,
+.splash-screen,
+.splash-screen-parent {
+  display: flex;
+  align-items: flex-start;
+}
+.splash-screen {
+  flex-direction: column;
+  gap: 23px;
+}
+.graphic-area {
+  padding: 0 0 9px;
+  gap: 9px;
+}
+.illustration-area,
+.illustration-area-child {
+  height: 54px;
+  width: 54px;
+  position: relative;
+  border-radius: 15px;
+  background-color: #2d9e5c;
+}
+.illustration-area-child {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+.image-14-icon {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  z-index: 1;
+}
+.title-area-wrapper {
+  flex-direction: column;
+  padding: 3px 0 0;
+}
+.slogan-area,
+.title-area,
+.title-area-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+.title-area {
+  flex-direction: column;
+}
+.slogan-area {
+  height: 27px;
+  padding: 0;
+  box-sizing: border-box;
+}
+.solusisampah {
+  margin: 0;
+  position: relative;
+  font-size: inherit;
+  font-weight: 700;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.sampah {
+  color: #2d9e5c;
+}
+.bank-sampah-digital {
+  position: relative;
+  font-size: 11px;
+  color: #9ab8b9;
+  flex-shrink: 0;
+}
+.navigation-panel,
+.tab-container {
+  height: 41px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.navigation-panel {
+  align-self: stretch;
+  border-radius: 15px;
+  border: 1px solid #d9d9d9;
+  row-gap: 20px;
+}
+.tab-container {
+  cursor: pointer;
+  border: 0;
+  padding: 10px;
+  background-color: #2d9e5c;
+  width: 263px;
+  border-radius: 10px;
+  justify-content: center;
+}
+.tab-container:hover {
+  background-color: #47b875;
+}
+.masuk {
+  position: relative;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: Poppins;
+  color: #fff;
+  text-align: left;
+  flex-shrink: 0;
+}
+.tab-container2 {
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  padding: 8px 10px;
+  background-color: #f7fbf9;
+  height: 41px;
+  width: 243px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.submit-button:hover,
+.tab-container2:hover {
+  background-color: #dee0e0;
+  border: 1px solid #bfbfbf;
+  box-sizing: border-box;
+}
+.daftar {
+  position: relative;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: Poppins;
+  color: #9ab8b9;
+  text-align: left;
+}
+.selamat-datang-parent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 24px;
+}
+.selamat-datang {
+  margin: 0;
+  position: relative;
+  font-size: inherit;
+  font-weight: 600;
+  font-family: inherit;
+}
+.belum-punya-akun-container {
+  position: relative;
+  font-size: 12px;
+  margin-top: -4px;
+}
+.login-form {
+  margin: 0;
+  gap: 19px;
+  max-width: 100%;
+}
+.email-atau-username-parent,
+.frame-parent,
+.login-form {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.frame-parent {
+  gap: 25px;
+  max-width: 100%;
+}
+.email-atau-username-parent {
+  gap: 5px;
+}
+.email-atau-username {
+  position: relative;
+  font-size: 12px;
+  font-family: Poppins;
+  color: #000;
+  text-align: left;
+}
+.username-field {
+  border: 1px solid #d9d9d9;
+  outline: 0;
+  width: 100%;
+  background-color: #f7fbf9;
+  align-self: stretch;
+  height: 45px;
+  position: relative;
+  border-radius: 10px;
+  box-sizing: border-box;
+  min-width: 250px;
+}
+.kata-sandi-parent {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5.5px;
+  max-width: 100%;
+}
+.visibility-toggle,
+.visibility-toggle-child {
+  height: 45px;
+  border-radius: 10px;
+  background-color: #f7fbf9;
+  border: 1px solid #d9d9d9;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.visibility-toggle {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 7px 23px 11px;
+}
+.visibility-toggle-child {
+  width: 506px;
+  position: relative;
+  display: none;
+  flex-shrink: 0;
+}
+.image-16-icon {
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  background-color: transparent;
+  width: 23px;
+  position: relative;
+  max-height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.lupa-kata-sandi-wrapper {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+.lupa-kata-sandi {
+  position: relative;
+  font-size: 12px;
+  font-family: Poppins;
+  color: #2d9e5c;
+  text-align: left;
+}
+.submit-button {
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  padding: 8px 10px;
+  background-color: #2d9e5c;
+  align-self: stretch;
+  height: 45px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.submit-button:hover {
+  background-color: #47b875;
+}
+.masuk2 {
+  position: relative;
+  font-size: 16px;
+  display: inline-block;
+  font-family: Poppins;
+  color: #fff;
+  text-align: left;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.frame-group {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 23px;
+  max-width: 100%;
+}
+.frame-container,
+.frame-wrapper {
+  display: flex;
+  align-items: flex-start;
+  max-width: 100%;
+}
+.frame-wrapper {
+  align-self: stretch;
+  justify-content: flex-end;
+  padding: 0 32px 0 33px;
+  box-sizing: border-box;
+}
+.frame-container {
+  flex: 1;
+  gap: 13px;
+}
+.dividers-wrapper {
+  width: 133px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 0 0;
+  box-sizing: border-box;
+}
+.dividers {
+  align-self: stretch;
+  height: 1px;
+  position: relative;
+  border-top: 1px solid #9ab8b9;
+  box-sizing: border-box;
+}
+.atau-lanjutkan-dengan {
+  position: relative;
+  font-size: 13px;
+  font-family: Poppins;
+  color: #9ab8b9;
+  text-align: left;
+}
+.google-login-button {
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  padding: 8px 10px;
+  background-color: transparent;
+  align-self: stretch;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.google-login-button:hover {
+  background-color: rgba(191, 191, 191, 0.09);
+  border: 1px solid #bfbfbf;
+  box-sizing: border-box;
+}
+.image-17-icon {
+  width: 27px;
+  position: relative;
+  max-height: 100%;
+  object-fit: cover;
+}
+.masuk-dengan-google {
+  position: relative;
+  font-size: 13px;
+  font-family: Poppins;
+  color: #000;
+  text-align: left;
+}
+.image-18 {
+  height: 512px;
+  width: 512px;
+  position: relative;
+  display: none;
+  max-width: 100%;
+}
+@media screen and (max-width: 1275px) {
+  .login {
+    flex-wrap: wrap;
+  }
+  .background,
+  .logo-area {
+    flex: 1;
+  }
+}
+@media screen and (max-width: 750px) {
+  .login {
+    gap: 51px;
+  }
+  .background,
+  .logo-area {
+    min-width: 100%;
+  }
+  .logo-area {
+    padding-top: 88px;
+    box-sizing: border-box;
+  }
+  .splash-screen-parent {
+    gap: 21px;
+  }
+  .frame-container,
+  .navigation-panel {
+    flex-wrap: wrap;
+  }
+}
+@media screen and (max-width: 450px) {
+  .login {
+    gap: 25px;
+  }
+  .solusisampah {
+    font-size: 16px;
+  }
+  .selamat-datang {
+    font-size: 19px;
+  }
+}

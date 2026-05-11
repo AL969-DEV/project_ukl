@@ -1,0 +1,477 @@
+:root {
+    --green:         #10B981;
+    --green-dark:    #059669;
+    --green-xdark:   #047857;
+    --green-light:   #D1FAE5;
+    --green-bg:      #ECFDF5;
+    --gold:          #F59E0B;
+
+    --white:         #FFFFFF;
+    --bg-page:       #F8FAFC;
+    --border:        #E5E7EB;
+    --border-light:  #F3F4F6;
+
+    --text-1:        #111827;
+    --text-2:        #374151;
+    --text-3:        #6B7280;
+    --text-4:        #9CA3AF;
+
+    --r-sm:          6px;
+    --r-md:          10px;
+    --r-lg:          12px;
+
+    --shadow-sm:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:     0 4px 14px rgba(0,0,0,0.07);
+
+    --container-w:   980px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-size: 14px;
+    background-color: var(--bg-page);
+    color: var(--text-1);
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+table  { border-collapse: collapse; }
+
+/* ================================================================
+   MAIN WRAPPER
+   ================================================================ */
+.riwayat-main {
+    padding: 40px 0 60px;
+    min-height: calc(100vh - 120px);  /* accounts for navbar + footer */
+}
+
+.riwayat-container {
+    max-width: var(--container-w);
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ================================================================
+   PAGE HEADER
+   ================================================================ */
+.riwayat-page-header { margin-bottom: 4px; }
+
+.riwayat-page-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin: 0 0 6px;
+}
+
+.riwayat-page-sub {
+    font-size: 13.5px;
+    color: var(--text-3);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ================================================================
+   SUMMARY CARDS ROW
+   ================================================================ */
+.riwayat-summary-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background-color: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.riwayat-stat-card {
+    flex: 1;
+    padding: 18px 24px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.riwayat-stat-card:last-child { border-right: none; }
+
+.riwayat-stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    color: var(--text-4);
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.riwayat-stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.riwayat-stat-gold { color: var(--green); }
+
+.riwayat-stat-unit {
+    font-size: 12px;
+    color: var(--text-3);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* ================================================================
+   FILTER BAR
+   ================================================================ */
+.riwayat-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Shared input base */
+.riwayat-filter-input {
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-2);
+    background-color: var(--white);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.riwayat-filter-input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.10);
+}
+
+/* Date input wrapper */
+.riwayat-filter-date-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.riwayat-date-input {
+    padding-right: 34px;
+    cursor: pointer;
+    min-width: 148px;
+}
+
+/* hide native calendar icon on webkit */
+.riwayat-date-input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 34px;
+    height: 100%;
+    cursor: pointer;
+}
+
+.riwayat-date-icon {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+}
+
+/* Select wrapper */
+.riwayat-filter-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.riwayat-select-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 32px;
+    min-width: 148px;
+    cursor: pointer;
+}
+
+.riwayat-select-chevron {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+}
+
+/* Reset button */
+.riwayat-btn-reset {
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    background-color: var(--white);
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.riwayat-btn-reset:hover {
+    background-color: var(--bg-page);
+    border-color: #9CA3AF;
+    color: var(--text-1);
+}
+
+/* ================================================================
+   TABLE CARD
+   ================================================================ */
+.riwayat-table-card {
+    background-color: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.riwayat-table-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.riwayat-table-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin: 0;
+}
+
+.riwayat-table-count {
+    font-size: 12.5px;
+    color: var(--text-4);
+    margin: 0;
+}
+
+/* ── Table ──────────────────────────────────────────────────────── */
+.riwayat-table-wrap { overflow-x: auto; }
+
+.riwayat-table {
+    width: 100%;
+    min-width: 560px;
+}
+
+/* Header */
+.riwayat-table thead tr {
+    background-color: #F9FAFB;
+    border-bottom: 1px solid var(--border);
+}
+
+.riwayat-table thead th {
+    padding: 10px 20px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Column alignment */
+.riwayat-th-berat,
+.riwayat-th-poin  { text-align: right; }
+.riwayat-th-status { text-align: center; }
+
+/* Body rows */
+.riwayat-tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color 0.12s;
+}
+
+.riwayat-tr:last-child { border-bottom: none; }
+.riwayat-tr:hover      { background-color: #FAFFFE; }
+
+.riwayat-table tbody td { padding: 14px 20px; vertical-align: middle; }
+
+/* Tanggal */
+.riwayat-td-tgl {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-2);
+    white-space: nowrap;
+}
+
+/* Kategori badges */
+.riwayat-kat-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--r-sm);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.riwayat-kat-badge.plastik    { background-color: #DBEAFE; color: #1D4ED8; }
+.riwayat-kat-badge.kertas     { background-color: #FEF9C3; color: #92400E; }
+.riwayat-kat-badge.logam      { background-color: #F3F4F6; color: #374151; }
+.riwayat-kat-badge.kaca       { background-color: #D1FAE5; color: #065F46; }
+.riwayat-kat-badge.elektronik { background-color: #EDE9FE; color: #5B21B6; }
+
+/* Berat */
+.riwayat-td-berat {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-1);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Poin */
+.riwayat-td-poin { text-align: right; }
+
+.riwayat-poin-value {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin: 0 0 2px;
+    line-height: 1.2;
+}
+
+.riwayat-poin-rate {
+    font-size: 11.5px;
+    color: var(--text-4);
+    margin: 0;
+}
+
+/* Status badges — pill shape */
+.riwayat-status-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.riwayat-status-badge.selesai  {
+    background-color: var(--green-light);   /* #D1FAE5 */
+    color: #065F46;
+}
+
+.riwayat-status-badge.diproses {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.riwayat-status-badge.pending  {
+    background-color: #F3F4F6;
+    color: #4B5563;
+}
+
+.riwayat-status-badge.ditolak  {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+/* ================================================================
+   PAGINATION
+   ================================================================ */
+.riwayat-pagination-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-light);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.riwayat-pagination-info {
+    font-size: 12.5px;
+    color: var(--text-4);
+    margin: 0;
+}
+
+.riwayat-pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Base page button */
+.riwayat-page-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    background-color: var(--white);
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.riwayat-page-btn:hover:not(:disabled) {
+    border-color: var(--green);
+    color: var(--green);
+    background-color: var(--green-bg);
+}
+
+.riwayat-page-btn.active {
+    background-color: var(--green);
+    border-color: var(--green);
+    color: var(--white);
+}
+
+.riwayat-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Number buttons: square-ish */
+.riwayat-page-btn.num {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+}
+
+@media (max-width: 720px) {
+    .riwayat-summary-row {
+        flex-direction: column;
+    }
+
+    .riwayat-stat-card {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .riwayat-stat-card:last-child { border-bottom: none; }
+
+    .riwayat-filter-bar {
+        justify-content: flex-start;
+    }
+
+    .riwayat-select-input,
+    .riwayat-date-input {
+        min-width: 0;
+        width: 100%;
+    }
+}
