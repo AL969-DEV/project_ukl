@@ -29,9 +29,6 @@
     color: var(--text-muted);
 }
 
-/* ==========================================================
-   FORM CARD
-   ========================================================== */
 .form-card {
     background-color: var(--white);
     border-radius: var(--radius-lg);
@@ -39,7 +36,6 @@
     overflow: hidden;
 }
 
-/* Card Header Strip */
 .form-card-header {
     display: flex;
     align-items: center;
@@ -93,9 +89,6 @@
     margin: 0;
 }
 
-/* ==========================================================
-   FORM SECTIONS
-   ========================================================== */
 .nasabah-form {
     padding: 0;
 }
@@ -130,9 +123,6 @@
     letter-spacing: 0;
 }
 
-/* ==========================================================
-   FORM GRID
-   ========================================================== */
 .form-grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -144,11 +134,6 @@
     grid-column: 1 / -1;
 }
 
-/* ==========================================================
-   FORM ELEMENTS
-   ========================================================== */
-
-/* Label */
 .form-label {
     display: block;
     font-size: 13px;
@@ -157,7 +142,6 @@
     margin-bottom: 6px;
 }
 
-/* Input wrapper (untuk ikon) */
 .input-wrapper {
     position: relative;
     display: flex;
@@ -173,7 +157,6 @@
     z-index: 1;
 }
 
-/* Base Input */
 .form-input {
     width: 100%;
     border: 1.5px solid var(--border-color);
@@ -189,12 +172,10 @@
     line-height: 1.5;
 }
 
-/* Input dengan ikon kiri */
 .form-input.has-icon {
     padding-left: 38px;
 }
 
-/* Input dengan toggle password (ikon kanan) */
 .form-input.has-icon-right {
     padding-right: 40px;
 }
