@@ -16,7 +16,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <a href="dashboard.php" class="nav-link <?= ($currentPage == 'dashboard.php') ? 'active' : '' ?>">Beranda</a>
             <a href="riwayat_user.php" class="nav-link <?= ($currentPage == 'riwayat_user.php' || $currentPage == 'riwayat_setoran.php') ? 'active' : '' ?>">Riwayat</a>
             <a href="tukar_poin.php" class="nav-link <?= ($currentPage == 'tukar_poin.php') ? 'active' : '' ?>">Tukar Poin</a>
-            <a href="#" class="nav-link">Tentang</a>
+            <a href="tentang.php" class="nav-link <?= ($currentPage == 'tentang.php') ? 'active' : '' ?>">Tentang</a>
         </nav>
 
         <!-- Right: Notif + User -->
