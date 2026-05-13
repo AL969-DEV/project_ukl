@@ -6,41 +6,48 @@ if (isset($_POST['login'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM accounts WHERE username = '$username'";
-    $result = mysqli_query($conn, $sql);
-    
-    if (mysqli_num_rows($result) === 1) {
-        $row = mysqli_fetch_assoc($result);
-        
+    $query_acc  = "SELECT * FROM accounts WHERE username = '$username'";
+    $result_acc = mysqli_query($conn, $query_acc);
+
+    if (mysqli_num_rows($result_acc) === 1) {
+        $row = mysqli_fetch_assoc($result_acc);
+
         if (password_verify($password, $row['password'])) {
+            
             $_SESSION['id_account'] = $row['id_account'];
             $_SESSION['role']       = $row['role'];
             $_SESSION['username']   = $row['username'];
 
-            if ($row['role'] === 'nasabah' || $row['role'] === 'user') {
-                if ($row['role'] === 'nasabah') {
-                    $id_acc = $row['id_account'];
-                    $get_profil = mysqli_query($conn, "SELECT nama_lengkap FROM nasabah WHERE id_account = '$id_acc'");
-                    if ($get_profil && mysqli_num_rows($get_profil) > 0) {
-                        $profil = mysqli_fetch_assoc($get_profil);
-                        $_SESSION['nama_lengkap'] = $profil['nama_lengkap'];
-                    } else {
-                        $_SESSION['nama_lengkap'] = $row['username'];
-                    }
-                } else {
-                    $_SESSION['nama_lengkap'] = $row['username'];
-                }
-                header("Location: users/dashboard.php");
-            } else if ($row['role'] === 'admin') {
-                $_SESSION['nama_lengkap'] = $row['username'];
+            if ($row['role'] === 'admin') {
+                $_SESSION['nama_lengkap'] = "Administrator";
                 header("Location: admin/dashboard.php");
+                exit();
+
+            } else if ($row['role'] === 'nasabah') {
+                $id_acc = $row['id_account'];
+                $query_profile = "SELECT nama_lengkap FROM nasabah WHERE id_account = '$id_acc'";
+                $result_profile = mysqli_query($conn, $query_profile);
+                
+                if ($profile = mysqli_fetch_assoc($result_profile)) {
+                    $_SESSION['nama_lengkap'] = $profile['nama_lengkap'];
+                } else {
+                    $_SESSION['nama_lengkap'] = "Nasabah Baru";
+                }
+                
+                header("Location: nasabah/dashboard.php");
+                exit();
+
+            } else { // Jika role === 'user'
+                $_SESSION['nama_lengkap'] = "Calon Nasabah";
+                header("Location: users/dashboard.php");
+                exit();
             }
-            exit();
+
         } else {
-            echo "<script>alert('Password salah!');</script>";
+            echo "<script>alert('Password salah!'); window.location='login.php';</script>";
         }
     } else {
-        echo "<script>alert('Username tidak ditemukan!');</script>";
+        echo "<script>alert('Username tidak terdaftar!'); window.location='login.php';</script>";
     }
 }
 ?>

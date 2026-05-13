@@ -110,16 +110,12 @@
         </div>
     </section>
 
-
-    <!-- ================================================================
-         SECTION VISI & MISI
-         ================================================================ -->
     <section class="tentang-section" id="visi-misi">
         <div class="tentang-container">
 
             <div class="tentang-section-header">
                 <span class="tentang-section-tag">Arah & Tujuan</span>
-                <h2 class="tentang-section-title">Visi &amp; Misi Kami</h2>
+                <h2 class="tentang-section-title">Visi &amp; Misi</h2>
                 <p class="tentang-section-sub">
                     Landasan yang menggerakkan setiap langkah SolusiSampah dalam menciptakan
                     ekosistem pengelolaan sampah yang lebih baik.
@@ -282,18 +278,16 @@
                         <div class="tentang-dev-avatar-ring"></div>
                     </div>
 
-                    <!-- Info -->
                     <h3 class="tentang-dev-name">Muhammad Ghani Al Fawwazi</h3>
                     <p class="tentang-dev-role">Siswa SMK · Full-Stack Developer</p>
                     <p class="tentang-dev-school">SMK Telkom Sidoarjo · Jurusan SIJA</p>
 
                     <p class="tentang-dev-bio">
-                        Membangun SolusiSampah sebagai proyek Ujian Kompetensi Lembaga (UKL)
+                        Membangun SolusiSampah sebagai proyek Ujian Kenaikan Level (UKL)
                         dengan tujuan menciptakan solusi digital nyata untuk masalah lingkungan
                         yang ada di masyarakat sekitar.
                     </p>
 
-                    <!-- Tech stack badges -->
                     <div class="tentang-dev-stack">
                         <span class="tentang-dev-badge">PHP Native</span>
                         <span class="tentang-dev-badge">MySQL</span>
@@ -301,7 +295,6 @@
                         <span class="tentang-dev-badge">JavaScript</span>
                     </div>
 
-                    <!-- Social links -->
                     <div class="tentang-dev-socials">
                         <a href="#" class="tentang-dev-social-btn">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>

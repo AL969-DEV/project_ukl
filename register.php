@@ -5,10 +5,10 @@ if (isset($_POST['register'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     
-    $query = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', 'nasabah')";
+    $query = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', 'user')";
 
     if (mysqli_query($conn, $query)) {
-        echo "<script>alert('Akun berhasil dibuat! Silakan hubungi Admin untuk aktivasi profil.'); window.location.href='login.php';</script>";
+        echo "<script>alert('Akun berhasil dibuat! Silakan login untuk melanjutkan.'); window.location.href='login.php';</script>";
     } else {
         echo "Error: " . mysqli_error($conn);
     }
