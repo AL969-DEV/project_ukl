@@ -2,7 +2,6 @@
 session_start();
 include '../includes/config.php'; // Sesuaikan path koneksi database kamu
 
-// Cek apakah admin sudah login
 if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit();
@@ -17,29 +16,24 @@ if (count($kata) > 1) {
 
 
 if (isset($_POST['submit'])) {
-    // 1. Ambil data dari form
     $nama     = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-    $email    = mysqli_real_escape_string($conn, $_POST['email']);
     $no_telp  = mysqli_real_escape_string($conn, $_POST['no_telp']);
     $alamat   = mysqli_real_escape_string($conn, $_POST['alamat']);
     $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Enkripsi password
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); 
     $role     = 'nasabah';
 
-    // 2. Mulai Transaksi (Agar jika satu gagal, semua batal - Standar Profesional UKL)
     mysqli_begin_transaction($conn);
 
     try {
-        // LANGKAH A: Simpan ke tabel ACCOUNTS
         $query_acc = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', '$role')";
         mysqli_query($conn, $query_acc);
         
-        // Ambil ID yang barusan dibuat di tabel accounts
         $id_account = mysqli_insert_id($conn);
 
         // LANGKAH B: Simpan ke tabel NASABAH menggunakan ID tadi
-        $query_nas = "INSERT INTO nasabah (id_account, nama_lengkap, email, no_telp, alamat) 
-                      VALUES ('$id_account', '$nama', '$email', '$no_telp', '$alamat')";
+        $query_nas = "INSERT INTO nasabah (id_account, nama_lengkap, no_telp, alamat) 
+                      VALUES ('$id_account', '$nama', '$no_telp', '$alamat')";
         mysqli_query($conn, $query_nas);
 
         // Jika semua OK, simpan permanen
@@ -180,25 +174,6 @@ if (isset($_POST['submit'])) {
                                         name="no_telp"
                                         class="form-input has-icon"
                                         placeholder="Contoh: 0812-3456-7890"
-                                        required
-                                    >
-                                </div>
-                            </div>
-
-                            <div class="form-group form-group-full">
-                                <label class="form-label" for="email">
-                                    Alamat Email <span class="required-mark">*</span>
-                                </label>
-                                <div class="input-wrapper">
-                                    <span class="input-icon">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </span>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        class="form-input has-icon"
-                                        placeholder="Contoh: siti.rahayu@gmail.com"
                                         required
                                     >
                                 </div>

@@ -13,6 +13,14 @@ $kata = explode(" ", $nama_admin);
 if (count($kata) > 1) {
     $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
 }
+
+include '../includes/config.php';
+
+// Menghitung total nasabah nyata dari database
+$query_nasabah = "SELECT COUNT(*) as total FROM nasabah";
+$result_nasabah = mysqli_query($conn, $query_nasabah);
+$row_nasabah = mysqli_fetch_assoc($result_nasabah);
+$total_nasabah = $row_nasabah['total'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -77,9 +85,9 @@ if (count($kata) > 1) {
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="#3B82F6" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                     <div class="stat-card-body">
-                        <p class="stat-card-value">2.481</p>
+                        <p class="stat-card-value"><?php echo number_format($total_nasabah, 0, ',', '.'); ?></p>
                         <p class="stat-card-label blue">Total Nasabah</p>
-                        <p class="stat-card-sub">+12 nasabah baru minggu ini</p>
+                        <p class="stat-card-sub">Data real time</p>
                     </div>
                 </div>
 
