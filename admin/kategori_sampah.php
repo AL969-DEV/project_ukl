@@ -1,8 +1,21 @@
 <?php
 session_start();
-// include '../includes/config.php'; // Uncomment if DB is needed later
+include '../includes/config.php';
 
-// Cek apakah admin sudah login
+if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $id_to_delete = (int)$_GET['id'];
+    $stmt = $conn->prepare("DELETE FROM kategori_sampah WHERE id_kategori = ?");
+    $stmt->bind_param("i", $id_to_delete);
+    if ($stmt->execute()) {
+        $_SESSION['success_msg'] = "Kategori berhasil dihapus.";
+    } else {
+        $_SESSION['error_msg'] = "Gagal menghapus kategori.";
+    }
+    $stmt->close();
+    header("Location: kategori_sampah.php");
+    exit();
+}
+
 if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit();
@@ -13,7 +26,20 @@ $inisial = strtoupper(substr($nama_admin, 0, 1));
 $kata = explode(" ", $nama_admin);
 if (count($kata) > 1) {
     $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
+    $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
 }
+
+$total_kategori = 0;
+$poin_tertinggi = 0;
+$q_stats = mysqli_query($conn, "SELECT COUNT(*) as total, MAX(poin_per_kg) as max_poin FROM kategori_sampah");
+if ($row_stats = mysqli_fetch_assoc($q_stats)) {
+    $total_kategori = $row_stats['total'] ?? 0;
+    $poin_tertinggi = $row_stats['max_poin'] ?? 0;
+}
+
+$query = "SELECT * FROM kategori_sampah ORDER BY id_kategori DESC";
+$result = mysqli_query($conn, $query);
+$total_data = mysqli_num_rows($result);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -32,11 +58,9 @@ if (count($kata) > 1) {
 <div class="app-wrapper">
 
     <?php $active_page = 'kategori'; include '../includes/sidebar_admin.php'; ?>
-
-    <!-- ===================== MAIN CONTENT ===================== -->
+    
     <div class="main-content">
 
-        <!-- TOP HEADER -->
         <header class="top-header">
             <div class="header-left">
                 <span class="header-breadcrumb">
@@ -83,8 +107,7 @@ if (count($kata) > 1) {
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo $total_kategori -->
-                        <p class="ks-summary-value">8</p>
+                        <p class="ks-summary-value"><?php echo $total_kategori; ?></p>
                         <p class="ks-summary-label">Total Kategori</p>
                     </div>
                 </div>
@@ -94,8 +117,7 @@ if (count($kata) > 1) {
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo $kategori_aktif -->
-                        <p class="ks-summary-value">7</p>
+                        <p class="ks-summary-value"><?php echo $total_kategori; ?></p>
                         <p class="ks-summary-label">Kategori Aktif</p>
                     </div>
                 </div>
@@ -105,8 +127,7 @@ if (count($kata) > 1) {
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo number_format($poin_tertinggi) -->
-                        <p class="ks-summary-value ks-val-gold">500</p>
+                        <p class="ks-summary-value ks-val-gold"><?php echo number_format($poin_tertinggi, 0, ',', '.'); ?></p>
                         <p class="ks-summary-label">Poin Tertinggi/Kg</p>
                     </div>
                 </div>
@@ -122,6 +143,23 @@ if (count($kata) > 1) {
                     </div>
                 </div>
             </div>
+
+            <?php if (isset($_SESSION['success_msg'])): ?>
+                <div style="background-color: #D1FAE5; color: #065F46; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; font-weight: 500;">
+                    <?php 
+                        echo htmlspecialchars($_SESSION['success_msg']); 
+                        unset($_SESSION['success_msg']);
+                    ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_SESSION['error_msg'])): ?>
+                <div style="background-color: #FEE2E2; color: #B91C1C; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; font-weight: 500;">
+                    <?php 
+                        echo htmlspecialchars($_SESSION['error_msg']); 
+                        unset($_SESSION['error_msg']);
+                    ?>
+                </div>
+            <?php endif; ?>
 
             <!-- ── Table Panel ── -->
             <div class="ks-table-panel">
@@ -168,186 +206,59 @@ if (count($kata) > 1) {
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- ================================================
-                                 PHP LOOP START:
-                                 <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                                 Ganti nilai dummy dengan echo $row['kolom']
-                                 ================================================ -->
-
-                            <tr>
-                                <td class="ks-td-ikon">
-                                    <!-- PHP: ganti dengan <img src="<?= $row['ikon'] ?>"> atau emoji -->
-                                    <div class="ks-ikon-wrap blue">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- PHP: echo $row['nama_kategori'] + $row['kode'] -->
-                                    <p class="ks-nama">Plastik PET</p>
-                                    <p class="ks-kode">KAT-001</p>
-                                </td>
-                                <td class="ks-td-poin">
-                                    <span class="ks-poin-badge">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                        <!-- PHP: echo number_format($row['poin_per_kg']) -->
-                                        500
-                                    </span>
-                                    <span class="ks-poin-unit">Poin/Kg</span>
-                                </td>
-                                <td class="ks-td-desc">
-                                    <!-- PHP: echo $row['deskripsi'] -->
-                                    Botol plastik bening (air mineral, minuman), wadah makanan transparan, kemasan PET daur ulang.
-                                </td>
-                                <td class="ks-td-vol">
-                                    <!-- PHP: echo $row['volume_diterima'] . ' Kg' -->
-                                    5.820 Kg
-                                </td>
-                                <td class="ks-td-status">
-                                    <!-- PHP: $row['status'] == 'aktif' ? 'aktif' : 'nonaktif' -->
-                                    <span class="status-badge aktif">● Aktif</span>
-                                </td>
-                                <td class="ks-td-aksi">
-                                    <div class="aksi-cell">
-                                        <a href="#" class="btn-aksi btn-detail" title="Detail">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                                        </a>
-                                        <a href="#" class="btn-aksi btn-edit" title="Edit">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        </a>
-                                        <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus kategori ini?')">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="ks-td-ikon">
-                                    <div class="ks-ikon-wrap yellow">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="white" stroke-width="1.8" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="ks-nama">Kertas / Kardus</p>
-                                    <p class="ks-kode">KAT-002</p>
-                                </td>
-                                <td class="ks-td-poin">
-                                    <span class="ks-poin-badge">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                        300
-                                    </span>
-                                    <span class="ks-poin-unit">Poin/Kg</span>
-                                </td>
-                                <td class="ks-td-desc">
-                                    Kardus bekas, koran, majalah, kertas HVS, buku lama, dan semua jenis kertas yang dapat didaur ulang.
-                                </td>
-                                <td class="ks-td-vol">3.410 Kg</td>
-                                <td class="ks-td-status"><span class="status-badge aktif">● Aktif</span></td>
-                                <td class="ks-td-aksi">
-                                    <div class="aksi-cell">
-                                        <a href="#" class="btn-aksi btn-detail" title="Detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus kategori ini?')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="ks-td-ikon">
-                                    <div class="ks-ikon-wrap gray">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="ks-nama">Logam / Besi</p>
-                                    <p class="ks-kode">KAT-003</p>
-                                </td>
-                                <td class="ks-td-poin">
-                                    <span class="ks-poin-badge">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                        450
-                                    </span>
-                                    <span class="ks-poin-unit">Poin/Kg</span>
-                                </td>
-                                <td class="ks-td-desc">
-                                    Kaleng bekas, besi tua, aluminium, tembaga, dan logam campuran lainnya yang masih layak daur ulang.
-                                </td>
-                                <td class="ks-td-vol">2.190 Kg</td>
-                                <td class="ks-td-status"><span class="status-badge aktif">● Aktif</span></td>
-                                <td class="ks-td-aksi">
-                                    <div class="aksi-cell">
-                                        <a href="#" class="btn-aksi btn-detail" title="Detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus kategori ini?')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="ks-td-ikon">
-                                    <div class="ks-ikon-wrap teal">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="white" stroke-width="1.8"/></svg>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="ks-nama">Kaca / Botol</p>
-                                    <p class="ks-kode">KAT-004</p>
-                                </td>
-                                <td class="ks-td-poin">
-                                    <span class="ks-poin-badge">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                        200
-                                    </span>
-                                    <span class="ks-poin-unit">Poin/Kg</span>
-                                </td>
-                                <td class="ks-td-desc">
-                                    Botol kaca bekas minuman, toples, cermin pecah, dan semua bahan kaca yang dapat dilebur ulang.
-                                </td>
-                                <td class="ks-td-vol">3.410 Kg</td>
-                                <td class="ks-td-status"><span class="status-badge aktif">● Aktif</span></td>
-                                <td class="ks-td-aksi">
-                                    <div class="aksi-cell">
-                                        <a href="#" class="btn-aksi btn-detail" title="Detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus kategori ini?')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="ks-td-ikon">
-                                    <div class="ks-ikon-wrap purple">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="3" stroke="white" stroke-width="1.8"/><path d="M9 18h6" stroke="white" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="9" r="2" fill="white"/></svg>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="ks-nama">Elektronik Bekas</p>
-                                    <p class="ks-kode">KAT-005</p>
-                                </td>
-                                <td class="ks-td-poin">
-                                    <span class="ks-poin-badge">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                        800
-                                    </span>
-                                    <span class="ks-poin-unit">Poin/Kg</span>
-                                </td>
-                                <td class="ks-td-desc">
-                                    Ponsel rusak, komputer tua, kabel listrik, baterai bekas, dan semua komponen elektronik yang masih dapat diproses.
-                                </td>
-                                <td class="ks-td-vol">380 Kg</td>
-                                <td class="ks-td-status"><span class="status-badge aktif">● Aktif</span></td>
-                                <td class="ks-td-aksi">
-                                    <div class="aksi-cell">
-                                        <a href="#" class="btn-aksi btn-detail" title="Detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-                                        <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus kategori ini?')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- ================================================
-                                 PHP LOOP END: <?php endwhile; ?>
-                                 ================================================ -->
+                            <?php if ($total_data > 0): ?>
+                                <?php 
+                                    $colors = ['blue', 'yellow', 'gray', 'teal', 'purple'];
+                                    $i = 0;
+                                    while ($row = mysqli_fetch_assoc($result)): 
+                                        $color = $colors[$i % count($colors)];
+                                        $i++;
+                                ?>
+                                <tr>
+                                    <td class="ks-td-ikon">
+                                        <div class="ks-ikon-wrap <?php echo $color; ?>">
+                                            <span style="color: white; font-weight: bold; font-size: 16px;">
+                                                <?php echo strtoupper(substr($row['nama_sampah'], 0, 1)); ?>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="ks-nama"><?php echo htmlspecialchars($row['nama_sampah']); ?></p>
+                                        <p class="ks-kode">KAT-<?php echo str_pad($row['id_kategori'], 3, '0', STR_PAD_LEFT); ?></p>
+                                    </td>
+                                    <td class="ks-td-poin">
+                                        <span class="ks-poin-badge">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                            <?php echo number_format($row['poin_per_kg'], 0, ',', '.'); ?>
+                                        </span>
+                                        <span class="ks-poin-unit">Poin/Kg</span>
+                                    </td>
+                                    <td class="ks-td-desc" style="max-width: 250px; white-space: normal; line-height: 1.4;">
+                                        <?php echo !empty($row['deskripsi']) ? htmlspecialchars($row['deskripsi']) : '-'; ?>
+                                    </td>
+                                    <td class="ks-td-vol">
+                                        0 Kg
+                                    </td>
+                                    <td class="ks-td-status">
+                                        <span class="status-badge aktif">● Aktif</span>
+                                    </td>
+                                    <td class="ks-td-aksi">
+                                        <div class="aksi-cell">
+                                            <a href="crud_kategori_sampah.php?id=<?php echo $row['id_kategori']; ?>" class="btn-aksi btn-edit" title="Edit">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            </a>
+                                            <a href="kategori_sampah.php?action=delete&id=<?php echo $row['id_kategori']; ?>" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Anda yakin ingin menghapus kategori <?php echo htmlspecialchars($row['nama_sampah']); ?>?');">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 24px;">Belum ada kategori sampah yang ditambahkan.</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -355,7 +266,7 @@ if (count($kata) > 1) {
                 <!-- Table Footer -->
                 <div class="table-footer">
                     <span class="table-info">
-                        Menampilkan <strong>5</strong> dari <strong>8</strong> kategori
+                        Menampilkan <strong><?php echo $total_data; ?></strong> dari <strong><?php echo $total_data; ?></strong> kategori
                     </span>
                     <div class="pagination">
                         <button class="page-btn active">1</button>

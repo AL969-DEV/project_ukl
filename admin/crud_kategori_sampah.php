@@ -6,11 +6,73 @@ if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+require_once '../includes/config.php';
+
 $nama_admin = $_SESSION['nama_lengkap'] ?? 'Admin';
 $inisial = strtoupper(substr($nama_admin, 0, 1));
 $kata = explode(" ", $nama_admin);
 if (count($kata) > 1) {
     $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
+}
+
+// Logic Add / Edit
+$id_kategori = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$is_edit = $id_kategori > 0;
+
+$nama_kategori = '';
+$poin_per_kg = '';
+$deskripsi = '';
+
+if ($is_edit) {
+    $stmt = $conn->prepare("SELECT * FROM kategori_sampah WHERE id_kategori = ?");
+    $stmt->bind_param("i", $id_kategori);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $nama_kategori = $row['nama_sampah'];
+        $poin_per_kg = $row['poin_per_kg'];
+        $deskripsi = isset($row['deskripsi']) ? $row['deskripsi'] : '';
+    } else {
+        header("Location: kategori_sampah.php");
+        exit();
+    }
+    $stmt->close();
+}
+
+$error_msg = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
+    $nama_kategori_post = trim($_POST['nama_kategori']);
+    $poin_per_kg_post = (int)$_POST['poin_per_kg'];
+    $deskripsi_post = trim($_POST['deskripsi']);
+
+    if (empty($nama_kategori_post) || $poin_per_kg_post <= 0) {
+        $error_msg = "Nama kategori dan poin per kilogram harus diisi dengan benar.";
+    } else {
+        if ($is_edit) {
+            $stmt = $conn->prepare("UPDATE kategori_sampah SET nama_sampah = ?, poin_per_kg = ?, deskripsi = ? WHERE id_kategori = ?");
+            $stmt->bind_param("sisi", $nama_kategori_post, $poin_per_kg_post, $deskripsi_post, $id_kategori);
+            if ($stmt->execute()) {
+                $_SESSION['success_msg'] = "Kategori sampah berhasil diperbarui!";
+                header("Location: kategori_sampah.php");
+                exit();
+            } else {
+                $error_msg = "Gagal memperbarui kategori: " . $conn->error;
+            }
+            $stmt->close();
+        } else {
+            $stmt = $conn->prepare("INSERT INTO kategori_sampah (nama_sampah, poin_per_kg, deskripsi) VALUES (?, ?, ?)");
+            $stmt->bind_param("sis", $nama_kategori_post, $poin_per_kg_post, $deskripsi_post);
+            if ($stmt->execute()) {
+                $_SESSION['success_msg'] = "Kategori sampah berhasil ditambahkan!";
+                header("Location: kategori_sampah.php");
+                exit();
+            } else {
+                $error_msg = "Gagal menambahkan kategori: " . $conn->error;
+            }
+            $stmt->close();
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -18,7 +80,7 @@ if (count($kata) > 1) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Kategori Sampah – SolusiSampah</title>
+    <title><?php echo $is_edit ? 'Edit Kategori Sampah' : 'Tambah Kategori Sampah'; ?> – SolusiSampah</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -77,12 +139,12 @@ if (count($kata) > 1) {
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                             <polyline points="9 18 15 12 9 6" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span class="tk-bc-current">Tambah Kategori Baru</span>
+                        <span class="tk-bc-current"><?php echo $is_edit ? 'Edit Kategori' : 'Tambah Kategori Baru'; ?></span>
                     </div>
-                    <h1 class="page-title">Tambah Kategori Sampah</h1>
-                    <p class="page-subtitle">Daftarkan jenis sampah baru beserta nilai poin per kilogramnya.</p>
+                    <h1 class="page-title"><?php echo $is_edit ? 'Edit Kategori Sampah' : 'Tambah Kategori Sampah'; ?></h1>
+                    <p class="page-subtitle"><?php echo $is_edit ? 'Perbarui informasi kategori sampah ini.' : 'Daftarkan jenis sampah baru beserta nilai poin per kilogramnya.'; ?></p>
                 </div>
-                <a href="#" class="btn-back">
+                <a href="kategori_sampah.php" class="btn-back">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -105,16 +167,20 @@ if (count($kata) > 1) {
                         </svg>
                     </div>
                     <div>
-                        <p class="tk-card-title">Data Kategori Baru</p>
+                        <p class="tk-card-title"><?php echo $is_edit ? 'Edit Data Kategori' : 'Data Kategori Baru'; ?></p>
                         <p class="tk-card-sub">Kolom bertanda <span class="req-star">*</span> wajib diisi.</p>
                     </div>
                 </div>
 
                 <hr class="tk-divider">
 
-                <!-- ── FORM ──
-                     PHP: ubah action="" ke "proses_kategori.php"
-                -->
+                <?php if ($error_msg): ?>
+                    <div style="background-color: #FEE2E2; color: #B91C1C; padding: 12px 16px; border-radius: 8px; margin: 16px 24px; font-size: 14px; font-weight: 500;">
+                        <?php echo htmlspecialchars($error_msg); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- ── FORM ── -->
                 <form method="POST" action="" autocomplete="off" class="tk-form">
 
                     <!-- Nama Kategori -->
@@ -136,6 +202,7 @@ if (count($kata) > 1) {
                                 name="nama_kategori"
                                 class="form-input tk-input"
                                 placeholder="Misal: Plastik PET"
+                                value="<?php echo htmlspecialchars($nama_kategori); ?>"
                                 required
                                 maxlength="80"
                             >
@@ -161,6 +228,7 @@ if (count($kata) > 1) {
                                 name="poin_per_kg"
                                 class="form-input tk-input"
                                 placeholder="Misal: 500"
+                                value="<?php echo htmlspecialchars($poin_per_kg); ?>"
                                 required
                                 min="1"
                                 max="99999"
@@ -180,16 +248,16 @@ if (count($kata) > 1) {
                             placeholder="Masukkan detail tentang kategori ini..."
                             maxlength="500"
                             oninput="updateCount(this,'charCount',500)"
-                        ></textarea>
+                        ><?php echo htmlspecialchars($deskripsi); ?></textarea>
                         <div class="tk-hint-row">
                             <p class="form-hint">Opsional. Jelaskan jenis sampah yang masuk kategori ini.</p>
-                            <span class="tk-char-count"><span id="charCount">0</span> / 500</span>
+                            <span class="tk-char-count"><span id="charCount"><?php echo strlen($deskripsi); ?></span> / 500</span>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="tk-actions">
-                        <a href="#" class="btn-batal">
+                        <a href="kategori_sampah.php" class="btn-batal">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
                                 <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
@@ -200,7 +268,7 @@ if (count($kata) > 1) {
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                                 <polyline points="20 6 9 17 4 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Simpan Kategori
+                            <?php echo $is_edit ? 'Simpan Perubahan' : 'Simpan Kategori'; ?>
                         </button>
                     </div>
 

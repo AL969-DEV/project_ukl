@@ -70,10 +70,8 @@ if (isset($_POST['submit'])) {
 
     <?php $active_page = 'nasabah'; include '../includes/sidebar_admin.php'; ?>
 
-    <!-- ===================== MAIN CONTENT ===================== -->
     <div class="main-content">
 
-        <!-- TOP HEADER -->
         <header class="top-header">
             <div class="header-left">
                 <span class="header-breadcrumb"><span style="color:var(--green-primary);font-weight:800;">Admin</span> Panel</span>
@@ -99,10 +97,8 @@ if (isset($_POST['submit'])) {
             </div>
         </header>
 
-        <!-- PAGE CONTENT -->
         <div class="page-content">
 
-            <!-- Breadcrumb + Judul -->
             <div class="page-title-section">
                 <nav class="breadcrumb-nav">
                     <a href="kelola_nasabah.php" class="breadcrumb-link">Kelola Nasabah</a>
@@ -115,7 +111,6 @@ if (isset($_POST['submit'])) {
                 <p class="page-subtitle">Isi formulir di bawah untuk mendaftarkan nasabah baru ke sistem.</p>
             </div>
 
-            <!-- FORM CARD -->
             <div class="form-card">
 
                 <div class="form-card-header">
@@ -130,10 +125,8 @@ if (isset($_POST['submit'])) {
 
                 <div class="form-card-divider"></div>
 
-                <!-- PHP: ganti action="" dengan nama file PHP pemroses, misal action="proses_tambah_nasabah.php" -->
                 <form method="POST" action="" class="nasabah-form" autocomplete="off">
 
-                    <!-- SECTION 1: Informasi Pribadi -->
                     <div class="form-section">
                         <h3 class="form-section-title">
                             <span class="form-section-num">01</span>
