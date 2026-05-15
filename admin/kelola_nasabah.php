@@ -213,8 +213,8 @@ $total_nasabah = mysqli_num_rows($result);
                                 </td>
                                 <td>
                                     <div class="kontak-cell">
-                                        <span class="kontak-email"><?php echo htmlspecialchars($row['email']); ?></span>
-                                        <span class="kontak-phone"><?php echo htmlspecialchars($row['no_telp']); ?></span>
+                                        <span class="kontak-email"><?php echo htmlspecialchars($row['email'] ?? '-'); ?></span>
+                                        <span class="kontak-phone"><?php echo htmlspecialchars($row['no_telp'] ?? '-'); ?></span>
                                     </div>
                                 </td>
                                 <td>

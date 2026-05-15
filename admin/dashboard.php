@@ -21,6 +21,16 @@ $query_nasabah = "SELECT COUNT(*) as total FROM nasabah";
 $result_nasabah = mysqli_query($conn, $query_nasabah);
 $row_nasabah = mysqli_fetch_assoc($result_nasabah);
 $total_nasabah = $row_nasabah['total'] ?? 0;
+
+$query_kat = "SELECT * FROM kategori_sampah ORDER BY id_kategori ASC";
+$result_kat = mysqli_query($conn, $query_kat);
+
+$query_trx = "SELECT ts.*, n.nama_lengkap, n.id_nasabah, ks.nama_sampah, ks.poin_per_kg 
+              FROM transaksi_setor ts
+              LEFT JOIN nasabah n ON ts.id_profile = n.id_nasabah
+              LEFT JOIN kategori_sampah ks ON ts.id_kategori = ks.id_kategori
+              ORDER BY ts.tgl_setor DESC LIMIT 10";
+$result_trx = mysqli_query($conn, $query_trx);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -145,32 +155,47 @@ $total_nasabah = $row_nasabah['total'] ?? 0;
                     </div>
                     <div class="form-group">
                         <label class="form-label">ID Nasabah</label>
-                        <input type="text" class="form-input" placeholder="Contoh: NSB-2024-2025">
+                        <input type="text" id="qr-id-nasabah" class="form-input" placeholder="Contoh: NSB-2024-2025">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Kategori Sampah</label>
-                            <select class="form-select">
+                            <select class="form-select" id="qr-kategori">
                                 <option value="">-- Pilih kategori --</option>
-                                <option value="plastik">Plastik</option>
-                                <option value="kertas">Kertas</option>
-                                <option value="logam">Logam</option>
-                                <option value="kaca">Kaca & Lainnya</option>
+                                <?php 
+                                if($result_kat && mysqli_num_rows($result_kat) > 0) {
+                                    mysqli_data_seek($result_kat, 0);
+                                    while($k = mysqli_fetch_assoc($result_kat)): 
+                                ?>
+                                    <option value="<?php echo htmlspecialchars($k['nama_sampah']); ?>"><?php echo htmlspecialchars($k['nama_sampah']); ?></option>
+                                <?php 
+                                    endwhile; 
+                                } else {
+                                ?>
+                                    <option value="plastik">Plastik</option>
+                                    <option value="kertas">Kertas</option>
+                                    <option value="logam">Logam</option>
+                                    <option value="kaca">Kaca & Lainnya</option>
+                                <?php } ?>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Berat (Kg)</label>
-                            <input type="number" class="form-input" placeholder="0.00">
+                            <input type="number" id="qr-berat" class="form-input" placeholder="0.00" step="0.01">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Catatan (opsional)</label>
-                        <input type="text" class="form-input" placeholder="Tambahkan catatan...">
+                        <input type="text" id="qr-catatan" class="form-input" placeholder="Tambahkan catatan...">
                     </div>
-                    <button class="btn-generate">
+                    <button class="btn-generate" onclick="generateQR()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="white" stroke-width="2" stroke-linecap="round"/><rect x="7" y="7" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/><rect x="13" y="7" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/><rect x="7" y="13" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/><rect x="13" y="13" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/></svg>
                         Generate QR Code
                     </button>
+                    <div id="qr-result" style="margin-top: 20px; text-align: center; display: none;">
+                        <img id="qr-image" src="" alt="QR Code" style="max-width: 150px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <p style="margin-top: 10px; font-size: 13px; color: #6B7280;">Scan QR ini untuk konfirmasi setoran</p>
+                    </div>
                 </div>
 
                 <!-- Recent Transactions Panel -->
@@ -200,80 +225,46 @@ $total_nasabah = $row_nasabah['total'] ?? 0;
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- =========================================================
-                                     PHP LOOP START: Ganti blok <tr> di bawah dengan:
-                                     <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                                     dan ubah nilai dummy dengan echo $row['kolom']
-                                     ========================================================= -->
-
-                                <tr>
-                                    <td class="trx-id">#TRX-4821</td>
-                                    <td>
-                                        <div class="nasabah-cell">
-                                            <div class="nasabah-avatar" style="background-color: #FEE2E2; color: #DC2626;">SR</div>
-                                            <div class="nasabah-info">
-                                                <span class="nasabah-name">Siti Rahayu</span>
-                                                <span class="nasabah-id">NSB-2024-0081</span>
+                                <?php if (mysqli_num_rows($result_trx) > 0): ?>
+                                    <?php while ($row = mysqli_fetch_assoc($result_trx)): 
+                                        $poin = $row['berat'] * ($row['poin_per_kg'] ?? 0);
+                                        
+                                        $nama_parts = explode(' ', trim($row['nama_lengkap'] ?? 'Nasabah'));
+                                        $initials = strtoupper(substr($nama_parts[0], 0, 1));
+                                        if (count($nama_parts) > 1) {
+                                            $initials .= strtoupper(substr($nama_parts[1], 0, 1));
+                                        }
+                                        
+                                        $status_class = strtolower($row['status']) == 'claimed' ? 'selesai' : 'diproses';
+                                        $status_text = strtolower($row['status']) == 'claimed' ? 'Selesai' : 'Diproses';
+                                        
+                                        $kategori_class = strtolower(explode(' ', $row['nama_sampah'] ?? '')[0]);
+                                        if (!in_array($kategori_class, ['plastik', 'kertas', 'logam', 'kaca'])) {
+                                            $kategori_class = 'plastik';
+                                        }
+                                    ?>
+                                    <tr>
+                                        <td class="trx-id">#TRX-<?php echo str_pad($row['id_setor'], 4, '0', STR_PAD_LEFT); ?></td>
+                                        <td>
+                                            <div class="nasabah-cell">
+                                                <div class="nasabah-avatar" style="background-color: #DCFCE7; color: #16A34A;"><?php echo $initials; ?></div>
+                                                <div class="nasabah-info">
+                                                    <span class="nasabah-name"><?php echo htmlspecialchars($row['nama_lengkap'] ?? 'Nasabah'); ?></span>
+                                                    <span class="nasabah-id">NSB-<?php echo str_pad($row['id_nasabah'] ?? 0, 4, '0', STR_PAD_LEFT); ?></span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge-jenis plastik">Plastik</span></td>
-                                    <td class="berat-cell">2.2 Kg</td>
-                                    <td class="poin-cell"><span class="star-icon">&#9733;</span> 160</td>
-                                    <td><span class="status-badge selesai">Selesai</span></td>
-                                </tr>
-
-                                <tr>
-                                    <td class="trx-id">#TRX-4820</td>
-                                    <td>
-                                        <div class="nasabah-cell">
-                                            <div class="nasabah-avatar" style="background-color: #DCFCE7; color: #16A34A;">BW</div>
-                                            <div class="nasabah-info">
-                                                <span class="nasabah-name">Budi Wahyono</span>
-                                                <span class="nasabah-id">NSB-2024-0047</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge-jenis kertas">Kertas</span></td>
-                                    <td class="berat-cell">5.8 Kg</td>
-                                    <td class="poin-cell"><span class="star-icon">&#9733;</span> 256</td>
-                                    <td><span class="status-badge diproses">Diproses</span></td>
-                                </tr>
-
-                                <tr>
-                                    <td class="trx-id">#TRX-4819</td>
-                                    <td>
-                                        <div class="nasabah-cell">
-                                            <div class="nasabah-avatar" style="background-color: #FEF3C7; color: #B45309;">DN</div>
-                                            <div class="nasabah-info">
-                                                <span class="nasabah-name">Dewi Novita</span>
-                                                <span class="nasabah-id">NSB-2024-0112</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge-jenis logam">Logam</span></td>
-                                    <td class="berat-cell">1.5 Kg</td>
-                                    <td class="poin-cell"><span class="star-icon">&#9733;</span> 120</td>
-                                    <td><span class="status-badge diproses">Diproses</span></td>
-                                </tr>
-
-                                <tr>
-                                    <td class="trx-id">#TRX-4818</td>
-                                    <td>
-                                        <div class="nasabah-cell">
-                                            <div class="nasabah-avatar" style="background-color: #D1FAE5; color: #065F46;">AP</div>
-                                            <div class="nasabah-info">
-                                                <span class="nasabah-name">Ahmad Pratama</span>
-                                                <span class="nasabah-id">NSB-2024-0112</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge-jenis kaca">Kaca</span></td>
-                                    <td class="berat-cell">4.0 Kg</td>
-                                    <td class="poin-cell"><span class="star-icon">&#9733;</span> 200</td>
-                                    <td><span class="status-badge selesai">Selesai</span></td>
-                                </tr>
-                                     PHP LOOP END: <?php endwhile; ?>
+                                        </td>
+                                        <td><span class="badge-jenis <?php echo $kategori_class; ?>"><?php echo htmlspecialchars($row['nama_sampah'] ?? 'Lainnya'); ?></span></td>
+                                        <td class="berat-cell"><?php echo $row['berat']; ?> Kg</td>
+                                        <td class="poin-cell"><span class="star-icon">&#9733;</span> <?php echo number_format($poin, 0, ',', '.'); ?></td>
+                                        <td><span class="status-badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span></td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 20px;">Belum ada transaksi.</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -293,6 +284,37 @@ $total_nasabah = $row_nasabah['total'] ?? 0;
         </div>
     </div>
 </div>
+
+<script>
+function generateQR() {
+    const idNasabah = document.getElementById('qr-id-nasabah').value;
+    const kategori = document.getElementById('qr-kategori').value;
+    const berat = document.getElementById('qr-berat').value;
+    const catatan = document.getElementById('qr-catatan').value;
+
+    if (!idNasabah || !kategori || !berat) {
+        alert('Mohon lengkapi ID Nasabah, Kategori, dan Berat!');
+        return;
+    }
+
+    const dataObj = {
+        id: idNasabah,
+        kat: kategori,
+        berat: berat,
+        note: catatan
+    };
+
+    // Menggunakan API pihak ketiga untuk membuat QR Code
+    const dataString = encodeURIComponent(JSON.stringify(dataObj));
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${dataString}&margin=10`;
+
+    const qrResult = document.getElementById('qr-result');
+    const qrImage = document.getElementById('qr-image');
+    
+    qrImage.src = qrUrl;
+    qrResult.style.display = 'block';
+}
+</script>
 
 </body>
 </html>
