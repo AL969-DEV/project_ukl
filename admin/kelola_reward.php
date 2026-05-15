@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../includes/config.php';
 
 if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
@@ -12,6 +13,132 @@ $kata = explode(" ", $nama_admin);
 if (count($kata) > 1) {
     $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
 }
+
+// -------------------------
+// PROSES HAPUS
+// -------------------------
+if (isset($_GET['delete'])) {
+    $id_del = (int)$_GET['delete'];
+    
+    $qImg = mysqli_query($conn, "SELECT gambar_voucher FROM voucher_reward WHERE id_voucher = $id_del");
+    if ($qImg && mysqli_num_rows($qImg) > 0) {
+        $rowImg = mysqli_fetch_assoc($qImg);
+        if (!empty($rowImg['gambar_voucher']) && file_exists("../uploads/rewards/" . $rowImg['gambar_voucher'])) {
+            unlink("../uploads/rewards/" . $rowImg['gambar_voucher']);
+        }
+    }
+
+    $qDel = "DELETE FROM voucher_reward WHERE id_voucher = $id_del";
+    if (mysqli_query($conn, $qDel)) {
+        echo "<script>alert('Hadiah berhasil dihapus!'); window.location='kelola_reward.php';</script>";
+    } else {
+        echo "<script>alert('Gagal menghapus hadiah!');</script>";
+    }
+}
+
+// -------------------------
+// PROSES TAMBAH / EDIT
+// -------------------------
+$edit_mode = false;
+$edit_data = [
+    'id_voucher' => '',
+    'nama_voucher' => '',
+    'deskripsi' => '',
+    'biaya_poin' => '',
+    'stok_voucher' => '',
+    'kategori_voucher' => '',
+    'gambar_voucher' => ''
+];
+
+if (isset($_GET['edit'])) {
+    $edit_mode = true;
+    $id_edit = (int)$_GET['edit'];
+    $qEdit = mysqli_query($conn, "SELECT * FROM voucher_reward WHERE id_voucher = $id_edit");
+    if ($qEdit && mysqli_num_rows($qEdit) > 0) {
+        $edit_data = mysqli_fetch_assoc($qEdit);
+    }
+}
+
+if (isset($_POST['submit'])) {
+    $nama = mysqli_real_escape_string($conn, $_POST['nama_hadiah']);
+    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+    $harga = (int)$_POST['harga_poin'];
+    $stok = (int)$_POST['stok'];
+    $kategori = mysqli_real_escape_string($conn, $_POST['kategori']);
+    $id_voucher_post = isset($_POST['id_voucher']) ? (int)$_POST['id_voucher'] : 0;
+    
+    // Upload Gambar
+    $gambar = '';
+    if (isset($_POST['gambar_lama'])) {
+        $gambar = $_POST['gambar_lama'];
+    }
+    
+    if (isset($_FILES['gambar_hadiah']) && $_FILES['gambar_hadiah']['error'] == 0) {
+        $ext = pathinfo($_FILES['gambar_hadiah']['name'], PATHINFO_EXTENSION);
+        $gambar_nama = time() . '_' . uniqid() . '.' . $ext;
+        $tmp = $_FILES['gambar_hadiah']['tmp_name'];
+        $path = "../uploads/rewards/" . $gambar_nama;
+        
+        if (move_uploaded_file($tmp, $path)) {
+            $gambar = $gambar_nama;
+            if ($id_voucher_post > 0 && !empty($_POST['gambar_lama']) && file_exists("../uploads/rewards/" . $_POST['gambar_lama'])) {
+                unlink("../uploads/rewards/" . $_POST['gambar_lama']);
+            }
+        }
+    }
+
+    if ($id_voucher_post > 0) {
+        $q = "UPDATE voucher_reward SET 
+                nama_voucher = '$nama', 
+                deskripsi = '$deskripsi', 
+                biaya_poin = $harga, 
+                stok_voucher = $stok, 
+                kategori_voucher = '$kategori', 
+                gambar_voucher = '$gambar' 
+              WHERE id_voucher = $id_voucher_post";
+        $msg = "Hadiah berhasil diperbarui!";
+    } else {
+        $q = "INSERT INTO voucher_reward (nama_voucher, deskripsi, biaya_poin, stok_voucher, kategori_voucher, gambar_voucher) 
+              VALUES ('$nama', '$deskripsi', $harga, $stok, '$kategori', '$gambar')";
+        $msg = "Hadiah baru berhasil ditambahkan!";
+    }
+
+    if (mysqli_query($conn, $q)) {
+        echo "<script>alert('$msg'); window.location='kelola_reward.php';</script>";
+    } else {
+        echo "<script>alert('Gagal menyimpan data: " . mysqli_error($conn) . "');</script>";
+    }
+}
+
+$qTotal = mysqli_query($conn, "SELECT COUNT(*) AS total FROM voucher_reward");
+$total_hadiah_aktif = $qTotal ? (mysqli_fetch_assoc($qTotal)['total'] ?? 0) : 0;
+
+$penukaran_bulan_ini = 0;
+try {
+    $qLog = mysqli_query($conn, "SELECT COUNT(*) AS total FROM log_penukaran WHERE MONTH(tanggal_penukaran) = MONTH(CURRENT_DATE()) AND YEAR(tanggal_penukaran) = YEAR(CURRENT_DATE())");
+    if ($qLog) {
+        $penukaran_bulan_ini = mysqli_fetch_assoc($qLog)['total'] ?? 0;
+    }
+} catch (Exception $e) {
+    try {
+        $qLog = mysqli_query($conn, "SELECT COUNT(*) AS total FROM log_penukaran WHERE MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE())");
+        if ($qLog) {
+            $penukaran_bulan_ini = mysqli_fetch_assoc($qLog)['total'] ?? 0;
+        }
+    } catch (Exception $e2) {
+        $penukaran_bulan_ini = 0;
+    }
+}
+
+$qHampirHabis = mysqli_query($conn, "SELECT COUNT(*) AS total FROM voucher_reward WHERE stok_voucher > 0 AND stok_voucher <= 10");
+$stok_hampir_habis = $qHampirHabis ? mysqli_fetch_assoc($qHampirHabis)['total'] : 0;
+
+$qHabis = mysqli_query($conn, "SELECT COUNT(*) AS total FROM voucher_reward WHERE stok_voucher = 0");
+$stok_habis = $qHabis ? mysqli_fetch_assoc($qHabis)['total'] : 0;
+
+// Untuk Tabel
+$qRewards = mysqli_query($conn, "SELECT * FROM voucher_reward ORDER BY id_voucher DESC");
+$total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
 ?>
 
 <!DOCTYPE html>
@@ -32,17 +159,13 @@ if (count($kata) > 1) {
 
     <?php $active_page = 'reward'; include '../includes/sidebar_admin.php'; ?>
 
-    <!-- ===================== MAIN CONTENT ===================== -->
     <div class="main-content">
 
-        <!-- TOP HEADER — identik dengan halaman lain -->
         <header class="top-header">
             <div class="header-left">
-                <div class="header-breadcrumb-wrap">
-                    <span class="header-breadcrumb-green">Admin</span>
-                    <span class="header-breadcrumb-text"> Panel</span>
-                </div>
-                <h1 class="header-page-title">Kelola Hadiah &amp; Reward</h1>
+                <span class="header-breadcrumb">
+                    <span style="color:var(--green-primary);font-weight:800;">Admin</span> <span style="color:var(--text-secondary);font-weight:500;">Panel</span>
+                </span>
             </div>
             <div class="header-center">
                 <div class="search-box">
@@ -56,9 +179,9 @@ if (count($kata) > 1) {
                     <span class="notif-dot"></span>
                 </button>
                 <div class="user-profile">
-                    <div class="user-avatar">AB</div>
+                    <div class="user-avatar"><?= $inisial ?></div>
                     <div class="user-info">
-                        <span class="user-name">Admin Budi</span>
+                        <span class="user-name"><?= htmlspecialchars($nama_admin) ?></span>
                         <span class="user-role">Super Admin</span>
                     </div>
                 </div>
@@ -68,6 +191,13 @@ if (count($kata) > 1) {
         <!-- PAGE CONTENT -->
         <div class="page-content">
 
+            <!-- ── PAGE TITLE ── -->
+            <div class="page-title-section">
+                <p class="page-breadcrumb-text">Kelola Reward</p>
+                <h1 class="page-title">Daftar Hadiah &amp; Reward</h1>
+                <p class="page-subtitle">Kelola hadiah penukaran poin, harga, dan ketersediaan stok untuk nasabah.</p>
+            </div>
+
             <!-- ── SUMMARY CARDS (4 card terpisah seperti di Figma) ── -->
             <div class="kr-summary-row">
                 <div class="kr-summary-card">
@@ -75,8 +205,7 @@ if (count($kata) > 1) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo $total_hadiah_aktif -->
-                        <p class="kr-summary-value">24</p>
+                        <p class="kr-summary-value"><?= number_format($total_hadiah_aktif, 0, ',', '.') ?></p>
                         <p class="kr-summary-label">Total Hadiah Aktif</p>
                     </div>
                 </div>
@@ -86,8 +215,7 @@ if (count($kata) > 1) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 3l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo $penukaran_bulan_ini -->
-                        <p class="kr-summary-value">138</p>
+                        <p class="kr-summary-value"><?= number_format($penukaran_bulan_ini, 0, ',', '.') ?></p>
                         <p class="kr-summary-label">Penukaran Bulan Ini</p>
                     </div>
                 </div>
@@ -97,8 +225,7 @@ if (count($kata) > 1) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo $stok_hampir_habis -->
-                        <p class="kr-summary-value">6</p>
+                        <p class="kr-summary-value"><?= number_format($stok_hampir_habis, 0, ',', '.') ?></p>
                         <p class="kr-summary-label">Stok Hampir Habis</p>
                     </div>
                 </div>
@@ -108,8 +235,7 @@ if (count($kata) > 1) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
                     </div>
                     <div>
-                        <!-- PHP: echo $stok_habis -->
-                        <p class="kr-summary-value">3</p>
+                        <p class="kr-summary-value"><?= number_format($stok_habis, 0, ',', '.') ?></p>
                         <p class="kr-summary-label">Stok Habis</p>
                     </div>
                 </div>
@@ -129,15 +255,18 @@ if (count($kata) > 1) {
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
                             </div>
                             <div>
-                                <h2 class="kr-panel-title">Tambah Hadiah Baru</h2>
+                                <h2 class="kr-panel-title"><?= $edit_mode ? 'Edit Hadiah' : 'Tambah Hadiah Baru' ?></h2>
                                 <p class="kr-panel-sub">Kolom bertanda <span class="req">*</span> wajib diisi.</p>
                             </div>
                         </div>
 
                         <div class="kr-divider"></div>
 
-                        <!-- PHP: ubah action ke proses_tambah_reward.php -->
-                        <form method="POST" action="" enctype="multipart/form-data" class="kr-form" autocomplete="off">
+                        <form method="POST" action="kelola_reward.php" enctype="multipart/form-data" class="kr-form" autocomplete="off">
+                            <?php if ($edit_mode): ?>
+                                <input type="hidden" name="id_voucher" value="<?= $edit_data['id_voucher'] ?>">
+                                <input type="hidden" name="gambar_lama" value="<?= htmlspecialchars($edit_data['gambar_voucher']) ?>">
+                            <?php endif; ?>
 
                             <!-- Nama Hadiah -->
                             <div class="form-group">
@@ -151,6 +280,7 @@ if (count($kata) > 1) {
                                     <input type="text" id="nama_hadiah" name="nama_hadiah"
                                         class="form-input has-icon"
                                         placeholder="Misal: Pulsa 10.000"
+                                        value="<?= htmlspecialchars($edit_data['nama_voucher']) ?>"
                                         required maxlength="100">
                                 </div>
                                 <p class="form-hint">Nama yang ditampilkan pada katalog penukaran nasabah.</p>
@@ -162,6 +292,7 @@ if (count($kata) > 1) {
                                 <input type="text" id="deskripsi" name="deskripsi"
                                     class="form-input"
                                     placeholder="Misal: Semua operator, berlaku 30 hari"
+                                    value="<?= htmlspecialchars($edit_data['deskripsi']) ?>"
                                     maxlength="150">
                             </div>
 
@@ -178,6 +309,7 @@ if (count($kata) > 1) {
                                         <input type="number" id="harga_poin" name="harga_poin"
                                             class="form-input has-icon"
                                             placeholder="Misal: 1000"
+                                            value="<?= htmlspecialchars($edit_data['biaya_poin']) ?>"
                                             required min="1">
                                     </div>
                                 </div>
@@ -192,6 +324,7 @@ if (count($kata) > 1) {
                                         <input type="number" id="stok" name="stok"
                                             class="form-input has-icon"
                                             placeholder="Misal: 50"
+                                            value="<?= htmlspecialchars($edit_data['stok_voucher']) ?>"
                                             required min="0">
                                     </div>
                                 </div>
@@ -201,12 +334,12 @@ if (count($kata) > 1) {
                             <div class="form-group">
                                 <label class="form-label" for="gambar_hadiah">Upload Gambar / Ikon</label>
                                 <label class="kr-upload-zone" for="gambar_hadiah" id="uploadZone">
-                                    <div class="kr-upload-content" id="uploadContent">
+                                    <div class="kr-upload-content" id="uploadContent" <?= (!empty($edit_data['gambar_voucher'])) ? 'style="display:none;"' : '' ?>>
                                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="color:#9CA3AF;margin-bottom:8px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                                         <p class="kr-upload-title">Klik untuk pilih gambar</p>
                                         <p class="kr-upload-hint">PNG, JPG, WEBP — Maks 2 MB</p>
                                     </div>
-                                    <img id="imgPreview" class="kr-upload-preview" src="" alt="" style="display:none;">
+                                    <img id="imgPreview" class="kr-upload-preview" src="<?= (!empty($edit_data['gambar_voucher'])) ? '../uploads/rewards/' . htmlspecialchars($edit_data['gambar_voucher']) : '' ?>" alt="" <?= (!empty($edit_data['gambar_voucher'])) ? 'style="display:block;"' : 'style="display:none;"' ?>>
                                 </label>
                                 <input type="file" id="gambar_hadiah" name="gambar_hadiah"
                                     class="kr-upload-hidden"
@@ -217,22 +350,27 @@ if (count($kata) > 1) {
                             <!-- Kategori -->
                             <div class="form-group">
                                 <label class="form-label" for="kategori">Kategori Hadiah</label>
-                                <select id="kategori" name="kategori" class="form-select">
+                                <select id="kategori" name="kategori" class="form-select" required>
                                     <option value="">-- Pilih kategori --</option>
-                                    <option value="pulsa">Pulsa / Paket Data</option>
-                                    <option value="ewallet">E-Wallet (DANA/GoPay/OVO)</option>
-                                    <option value="listrik">Token Listrik</option>
-                                    <option value="sembako">Sembako</option>
-                                    <option value="voucher">Voucher Belanja</option>
-                                    <option value="lainnya">Lainnya</option>
+                                    <option value="pulsa" <?= ($edit_data['kategori_voucher'] == 'pulsa') ? 'selected' : '' ?>>Pulsa / Paket Data</option>
+                                    <option value="ewallet" <?= ($edit_data['kategori_voucher'] == 'ewallet') ? 'selected' : '' ?>>E-Wallet (DANA/GoPay/OVO)</option>
+                                    <option value="listrik" <?= ($edit_data['kategori_voucher'] == 'listrik') ? 'selected' : '' ?>>Token Listrik</option>
+                                    <option value="sembako" <?= ($edit_data['kategori_voucher'] == 'sembako') ? 'selected' : '' ?>>Sembako</option>
+                                    <option value="voucher" <?= ($edit_data['kategori_voucher'] == 'voucher') ? 'selected' : '' ?>>Voucher Belanja</option>
+                                    <option value="lainnya" <?= ($edit_data['kategori_voucher'] == 'lainnya') ? 'selected' : '' ?>>Lainnya</option>
                                 </select>
                             </div>
 
                             <!-- Submit -->
-                            <button type="submit" name="submit" class="btn-primary">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                Simpan Hadiah
-                            </button>
+                            <div style="display:flex; gap:10px;">
+                                <button type="submit" name="submit" class="btn-primary" style="flex:1;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <?= $edit_mode ? 'Simpan Perubahan' : 'Simpan Hadiah' ?>
+                                </button>
+                                <?php if ($edit_mode): ?>
+                                    <a href="kelola_reward.php" class="btn-primary" style="background:#6B7280; flex:1; text-align:center;">Batal</a>
+                                <?php endif; ?>
+                            </div>
 
                         </form>
                     </div>
@@ -250,8 +388,7 @@ if (count($kata) > 1) {
                             </div>
                             <div>
                                 <h2 class="kr-panel-title">Daftar Reward Aktif</h2>
-                                <!-- PHP: echo 'Total ' . $total_hadiah . ' hadiah terdaftar dalam sistem.' -->
-                                <p class="kr-panel-sub">Total <strong>24</strong> hadiah terdaftar dalam sistem.</p>
+                                <p class="kr-panel-sub">Total <strong><?= $total_hadiah_aktif ?></strong> hadiah terdaftar dalam sistem.</p>
                             </div>
                         </div>
 
@@ -289,148 +426,65 @@ if (count($kata) > 1) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- ================================================
-                                         PHP LOOP START:
-                                         <?php $no=1; while ($row = mysqli_fetch_assoc($result)): ?>
-                                         ================================================ -->
+                                    <?php 
+                                    if ($qRewards && mysqli_num_rows($qRewards) > 0):
+                                        $no = 1; 
+                                        while ($row = mysqli_fetch_assoc($qRewards)): 
+                                            // Menentukan warna badge stok
+                                            $stok_class = 'normal';
+                                            if ($row['stok_voucher'] == 0) $stok_class = 'empty';
+                                            elseif ($row['stok_voucher'] <= 10) $stok_class = 'low';
+                                    ?>
                                     <tr>
-                                        <td class="td-no">1</td>
+                                        <td class="td-no"><?= $no++ ?></td>
                                         <td class="td-img">
-                                            <div class="reward-thumb blue">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="3" stroke="white" stroke-width="1.8"/><circle cx="12" cy="9" r="2" fill="white"/><path d="M9 18h6" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
-                                            </div>
+                                            <?php if (!empty($row['gambar_voucher'])): ?>
+                                                <img src="../uploads/rewards/<?= htmlspecialchars($row['gambar_voucher']) ?>" alt="Reward" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+                                            <?php else: ?>
+                                                <div class="reward-thumb blue">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="3" stroke="white" stroke-width="1.8"/><circle cx="12" cy="9" r="2" fill="white"/><path d="M9 18h6" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
-                                            <p class="td-name">Pulsa Rp 10.000</p>
-                                            <p class="td-desc-small">Semua operator</p>
+                                            <p class="td-name"><?= htmlspecialchars($row['nama_voucher']) ?></p>
+                                            <p class="td-desc-small"><?= htmlspecialchars($row['deskripsi']) ?></p>
                                         </td>
                                         <td class="td-poin">
                                             <span class="poin-tag">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                                1.000
+                                                <?= number_format($row['biaya_poin'], 0, ',', '.') ?>
                                             </span>
                                         </td>
-                                        <td class="td-stok"><span class="stok-pill normal">50</span></td>
+                                        <td class="td-stok"><span class="stok-pill <?= $stok_class ?>"><?= $row['stok_voucher'] ?></span></td>
                                         <td class="td-aksi">
                                             <div class="aksi-cell">
-                                                <a href="#" class="btn-aksi btn-edit" title="Edit">
+                                                <a href="kelola_reward.php?edit=<?= $row['id_voucher'] ?>" class="btn-aksi btn-edit" title="Edit">
                                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                                     Edit
                                                 </a>
-                                                <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus hadiah ini?')">
+                                                <a href="kelola_reward.php?delete=<?= $row['id_voucher'] ?>" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus hadiah ini?')">
                                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                                     Hapus
                                                 </a>
                                             </div>
                                         </td>
                                     </tr>
-
+                                    <?php 
+                                        endwhile; 
+                                    else:
+                                    ?>
                                     <tr>
-                                        <td class="td-no">2</td>
-                                        <td class="td-img">
-                                            <div class="reward-thumb purple">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" stroke-width="1.8"/><path d="M2 10h20" stroke="white" stroke-width="1.8" stroke-linecap="round"/><circle cx="6" cy="15" r="1" fill="white"/><path d="M10 15h4" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <p class="td-name">DANA Rp 25.000</p>
-                                            <p class="td-desc-small">Transfer ke dompet digital DANA</p>
-                                        </td>
-                                        <td class="td-poin">
-                                            <span class="poin-tag">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                                2.500
-                                            </span>
-                                        </td>
-                                        <td class="td-stok"><span class="stok-pill normal">32</span></td>
-                                        <td class="td-aksi">
-                                            <div class="aksi-cell">
-                                                <a href="#" class="btn-aksi btn-edit" title="Edit">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                    Edit
-                                                </a>
-                                                <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus hadiah ini?')">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                                    Hapus
-                                                </a>
-                                            </div>
-                                        </td>
+                                        <td colspan="6" style="text-align:center; padding:20px;">Belum ada data reward.</td>
                                     </tr>
-
-                                    <tr>
-                                        <td class="td-no">3</td>
-                                        <td class="td-img">
-                                            <div class="reward-thumb orange">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <p class="td-name">Token Listrik 20kWh</p>
-                                            <p class="td-desc-small">Token PLN prabayar semua meteran</p>
-                                        </td>
-                                        <td class="td-poin">
-                                            <span class="poin-tag">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                                6.000
-                                            </span>
-                                        </td>
-                                        <td class="td-stok"><span class="stok-pill low">7</span></td>
-                                        <td class="td-aksi">
-                                            <div class="aksi-cell">
-                                                <a href="#" class="btn-aksi btn-edit" title="Edit">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                    Edit
-                                                </a>
-                                                <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus hadiah ini?')">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                                    Hapus
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="td-no">4</td>
-                                        <td class="td-img">
-                                            <div class="reward-thumb green">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M16 10a4 4 0 01-8 0" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <p class="td-name">Paket Sembako 5 Kg</p>
-                                            <p class="td-desc-small">Beras, gula, minyak goreng</p>
-                                        </td>
-                                        <td class="td-poin">
-                                            <span class="poin-tag">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                                8.000
-                                            </span>
-                                        </td>
-                                        <td class="td-stok"><span class="stok-pill empty">0</span></td>
-                                        <td class="td-aksi">
-                                            <div class="aksi-cell">
-                                                <a href="#" class="btn-aksi btn-edit" title="Edit">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                    Edit
-                                                </a>
-                                                <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Hapus hadiah ini?')">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                                    Hapus
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- ================================================
-                                         PHP LOOP END: <?php $no++; endwhile; ?>
-                                         ================================================ -->
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
 
-                        <!-- Pagination -->
                         <div class="table-footer">
-                            <span class="table-info">Menampilkan <strong>1–4</strong> dari <strong>24</strong> hadiah</span>
+                            <span class="table-info">Menampilkan <strong><?= $total_tampil ?></strong> hadiah</span>
+                            <!--
                             <div class="pagination">
                                 <button class="page-btn page-prev" disabled>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -446,17 +500,16 @@ if (count($kata) > 1) {
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 </button>
                             </div>
+                            -->
                         </div>
 
-                    </div><!-- end kr-panel -->
-                </div><!-- end kr-col-table -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            </div><!-- end kr-main-grid -->
-        </div><!-- end page-content -->
-    </div><!-- end main-content -->
-</div><!-- end app-wrapper -->
-
-<?php include 'includes/footer.php'; ?>
 
 <script>
     function previewImg(input) {

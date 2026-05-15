@@ -16,10 +16,8 @@
 
     <?php $active_page = 'peringkat'; include '../includes/sidebar_admin.php'; ?>
 
-    <!-- ===================== MAIN CONTENT ===================== -->
     <div class="main-content">
 
-        <!-- TOP HEADER -->
         <header class="top-header">
             <div class="header-left">
                 <span class="header-breadcrumb">
@@ -47,14 +45,12 @@
             </div>
         </header>
 
-        <!-- PAGE CONTENT -->
         <div class="page-content">
 
-            <!-- ── Page Title Row ── -->
             <div class="lb-title-row">
                 <div>
-                    <p class="page-breadcrumb-text">Laporan</p>
-                    <h1 class="page-title">🏆 Peringkat Nasabah <span class="lb-title-light">(Leaderboard)</span></h1>
+                    <p class="page-breadcrumb-text">Peringkat Nasabah</p>
+                    <h1 class="page-title">Laporan Peringkat Nasabah <span class="lb-title-light">(Leaderboard)</span></h1>
                     <p class="page-subtitle">Daftar nasabah terbaik berdasarkan akumulasi poin tertinggi.</p>
                 </div>
                 <div class="lb-title-actions">

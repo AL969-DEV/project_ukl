@@ -381,7 +381,20 @@
 .aksi-cell {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-aksi {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background-color 0.15s;
+    white-space: nowrap;
 }
 
 /* Edit — yellow */
