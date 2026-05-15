@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 11, 2026 at 06:24 AM
+-- Generation Time: May 15, 2026 at 02:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `accounts` (
   `id_account` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','nasabah') NOT NULL
+  `role` enum('admin','user','nasabah') NOT NULL DEFAULT 'user'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -40,7 +40,9 @@ CREATE TABLE `accounts` (
 
 INSERT INTO `accounts` (`id_account`, `username`, `password`, `role`) VALUES
 (8, 'Ligas', '$2y$10$IPIynmT6zRhe/T2vekFd6..P5D8/pqNmeaRZPZSDDz6SS1dKM1LK.', 'admin'),
-(13, 'AL', '$2y$10$ieTKdkwxA08SuOR1FRgZV.3txN/KLmFosPT7FcCiNnJjd4Jk9LCxq', 'nasabah');
+(13, 'AL', '$2y$10$ieTKdkwxA08SuOR1FRgZV.3txN/KLmFosPT7FcCiNnJjd4Jk9LCxq', 'nasabah'),
+(16, 'Kyzenn', '$2y$10$TyK235319CdR7naEz9Hpz.QfOM91GHcOFZzqGzxq2DHCIylcRb5GG', 'nasabah'),
+(17, 'Coba', '$2y$10$UoMDHRq7rXBPc35HHMXn/.o.gIOSUf5DwSUOjGQxVb..xkpQvLZAm', 'user');
 
 -- --------------------------------------------------------
 
@@ -51,8 +53,16 @@ INSERT INTO `accounts` (`id_account`, `username`, `password`, `role`) VALUES
 CREATE TABLE `kategori_sampah` (
   `id_kategori` int(11) NOT NULL,
   `nama_sampah` varchar(50) NOT NULL,
-  `poin_per_kg` int(11) NOT NULL
+  `poin_per_kg` int(11) NOT NULL,
+  `deskripsi` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `kategori_sampah`
+--
+
+INSERT INTO `kategori_sampah` (`id_kategori`, `nama_sampah`, `poin_per_kg`, `deskripsi`) VALUES
+(2, 'Plastik PET', 450, 'Khusus plastik yang belogo PET seperti galon, kemasan air mineral, dll.');
 
 -- --------------------------------------------------------
 
@@ -82,6 +92,14 @@ CREATE TABLE `nasabah` (
   `total_poin` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `nasabah`
+--
+
+INSERT INTO `nasabah` (`id_nasabah`, `id_account`, `nama_lengkap`, `alamat`, `no_telp`, `total_poin`) VALUES
+(1, 15, 'Muhammad Ghani', 'Sidoarjo', '0854594854', 0),
+(2, 16, 'Fulan bin Fulan', 'Sidoarjo', '0832973727', 0);
+
 -- --------------------------------------------------------
 
 --
@@ -107,9 +125,19 @@ CREATE TABLE `transaksi_setor` (
 CREATE TABLE `voucher_reward` (
   `id_voucher` int(11) NOT NULL,
   `nama_voucher` varchar(100) NOT NULL,
+  `deskripsi` varchar(150) DEFAULT NULL,
   `biaya_poin` int(11) NOT NULL,
-  `stok_voucher` int(11) NOT NULL
+  `stok_voucher` int(11) NOT NULL,
+  `gambar_voucher` varchar(255) DEFAULT NULL,
+  `kategori_voucher` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `voucher_reward`
+--
+
+INSERT INTO `voucher_reward` (`id_voucher`, `nama_voucher`, `deskripsi`, `biaya_poin`, `stok_voucher`, `gambar_voucher`, `kategori_voucher`) VALUES
+(1, 'Dana Rp 10.000', '', 2500, 15, '', 'ewallet');
 
 --
 -- Indexes for dumped tables
@@ -166,13 +194,13 @@ ALTER TABLE `voucher_reward`
 -- AUTO_INCREMENT for table `accounts`
 --
 ALTER TABLE `accounts`
-  MODIFY `id_account` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_account` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `kategori_sampah`
 --
 ALTER TABLE `kategori_sampah`
-  MODIFY `id_kategori` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_kategori` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `log_penukaran`
@@ -184,7 +212,7 @@ ALTER TABLE `log_penukaran`
 -- AUTO_INCREMENT for table `nasabah`
 --
 ALTER TABLE `nasabah`
-  MODIFY `id_nasabah` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_nasabah` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `transaksi_setor`
@@ -196,7 +224,7 @@ ALTER TABLE `transaksi_setor`
 -- AUTO_INCREMENT for table `voucher_reward`
 --
 ALTER TABLE `voucher_reward`
-  MODIFY `id_voucher` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_voucher` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
