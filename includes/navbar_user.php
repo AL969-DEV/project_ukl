@@ -1,5 +1,11 @@
 <?php
 $currentPage = basename($_SERVER['PHP_SELF']);
+$nama_user_nav = $_SESSION['nama_lengkap'] ?? 'Nasabah';
+$inisial_nav = strtoupper(substr($nama_user_nav, 0, 1));
+$kata_nav = explode(" ", $nama_user_nav);
+if (count($kata_nav) > 1) {
+    $inisial_nav = strtoupper(substr($kata_nav[0], 0, 1) . substr($kata_nav[1], 0, 1));
+}
 ?>
 <header class="navbar">
     <div class="navbar-inner">
@@ -29,9 +35,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <span class="notif-dot"></span>
             </button>
             <div class="navbar-user">
-                <!-- PHP: ganti "SR" dengan inisial $nama_user, ganti teks dengan echo $nama_user -->
-                <div class="navbar-avatar">SR</div>
-                <span class="navbar-username">Siti Rahayu</span>
+                <div class="navbar-avatar"><?= htmlspecialchars($inisial_nav) ?></div>
+                <span class="navbar-username"><?= htmlspecialchars($nama_user_nav) ?></span>
             </div>
         </div>
 

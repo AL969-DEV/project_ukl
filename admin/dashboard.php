@@ -167,15 +167,15 @@ $result_trx = mysqli_query($conn, $query_trx);
                                     mysqli_data_seek($result_kat, 0);
                                     while($k = mysqli_fetch_assoc($result_kat)): 
                                 ?>
-                                    <option value="<?php echo htmlspecialchars($k['nama_sampah']); ?>"><?php echo htmlspecialchars($k['nama_sampah']); ?></option>
+                                    <option value="<?php echo htmlspecialchars($k['id_kategori']); ?>"><?php echo htmlspecialchars($k['nama_sampah']); ?></option>
                                 <?php 
                                     endwhile; 
                                 } else {
                                 ?>
-                                    <option value="plastik">Plastik</option>
-                                    <option value="kertas">Kertas</option>
-                                    <option value="logam">Logam</option>
-                                    <option value="kaca">Kaca & Lainnya</option>
+                                    <option value="1">Plastik</option>
+                                    <option value="2">Kertas</option>
+                                    <option value="3">Logam</option>
+                                    <option value="4">Kaca & Lainnya</option>
                                 <?php } ?>
                             </select>
                         </div>
@@ -188,9 +188,9 @@ $result_trx = mysqli_query($conn, $query_trx);
                         <label class="form-label">Catatan (opsional)</label>
                         <input type="text" id="qr-catatan" class="form-input" placeholder="Tambahkan catatan...">
                     </div>
-                    <button class="btn-generate" onclick="generateQR()">
+                    <button class="btn-generate" onclick="generateQR()" id="btn-generate-qr">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="white" stroke-width="2" stroke-linecap="round"/><rect x="7" y="7" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/><rect x="13" y="7" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/><rect x="7" y="13" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/><rect x="13" y="13" width="4" height="4" rx="0.5" stroke="white" stroke-width="1.5"/></svg>
-                        Generate QR Code
+                        <span>Generate QR Code</span>
                     </button>
                     <div id="qr-result" style="margin-top: 20px; text-align: center; display: none;">
                         <img id="qr-image" src="" alt="QR Code" style="max-width: 150px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
@@ -227,7 +227,7 @@ $result_trx = mysqli_query($conn, $query_trx);
                             <tbody>
                                 <?php if (mysqli_num_rows($result_trx) > 0): ?>
                                     <?php while ($row = mysqli_fetch_assoc($result_trx)): 
-                                        $poin = $row['berat'] * ($row['poin_per_kg'] ?? 0);
+                                        $poin = $row['poin'] > 0 ? $row['poin'] : ($row['berat'] * ($row['poin_per_kg'] ?? 0));
                                         
                                         $nama_parts = explode(' ', trim($row['nama_lengkap'] ?? 'Nasabah'));
                                         $initials = strtoupper(substr($nama_parts[0], 0, 1));
@@ -236,7 +236,7 @@ $result_trx = mysqli_query($conn, $query_trx);
                                         }
                                         
                                         $status_class = strtolower($row['status']) == 'claimed' ? 'selesai' : 'diproses';
-                                        $status_text = strtolower($row['status']) == 'claimed' ? 'Selesai' : 'Diproses';
+                                        $status_text = strtolower($row['status']) == 'claimed' ? 'Selesai' : 'Pending';
                                         
                                         $kategori_class = strtolower(explode(' ', $row['nama_sampah'] ?? '')[0]);
                                         if (!in_array($kategori_class, ['plastik', 'kertas', 'logam', 'kaca'])) {
@@ -270,13 +270,7 @@ $result_trx = mysqli_query($conn, $query_trx);
                     </div>
 
                     <div class="table-footer">
-                        <span class="table-info">Menampilkan 4 dari 12 transaksi</span>
-                        <div class="pagination">
-                            <button class="page-btn active">1</button>
-                            <button class="page-btn">2</button>
-                            <button class="page-btn">3</button>
-                            <button class="page-btn page-next">&#8250;</button>
-                        </div>
+                        <span class="table-info">Menampilkan transaksi terbaru</span>
                     </div>
                 </div>
 
@@ -287,32 +281,64 @@ $result_trx = mysqli_query($conn, $query_trx);
 
 <script>
 function generateQR() {
-    const idNasabah = document.getElementById('qr-id-nasabah').value;
+    const idNasabahStr = document.getElementById('qr-id-nasabah').value;
     const kategori = document.getElementById('qr-kategori').value;
     const berat = document.getElementById('qr-berat').value;
     const catatan = document.getElementById('qr-catatan').value;
 
-    if (!idNasabah || !kategori || !berat) {
+    if (!idNasabahStr || !kategori || !berat) {
         alert('Mohon lengkapi ID Nasabah, Kategori, dan Berat!');
         return;
     }
 
-    const dataObj = {
-        id: idNasabah,
-        kat: kategori,
-        berat: berat,
-        note: catatan
-    };
+    const btn = document.getElementById('btn-generate-qr');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Memproses...';
+    btn.disabled = true;
 
-    // Menggunakan API pihak ketiga untuk membuat QR Code
-    const dataString = encodeURIComponent(JSON.stringify(dataObj));
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${dataString}&margin=10`;
+    // Send via AJAX to save to DB first
+    const formData = new FormData();
+    formData.append('id_nasabah', idNasabahStr);
+    formData.append('id_kategori', kategori);
+    formData.append('berat', berat);
+    formData.append('catatan', catatan);
 
-    const qrResult = document.getElementById('qr-result');
-    const qrImage = document.getElementById('qr-image');
-    
-    qrImage.src = qrUrl;
-    qrResult.style.display = 'block';
+    fetch('ajax_generate_qr.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        if (data.status === 'success') {
+            // Generate QR Code containing the id_setor
+            const qrPayload = JSON.stringify({ type: 'setor', id_setor: data.id_setor });
+            const dataString = encodeURIComponent(qrPayload);
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${dataString}&margin=10`;
+
+            const qrResult = document.getElementById('qr-result');
+            const qrImage = document.getElementById('qr-image');
+            
+            qrImage.src = qrUrl;
+            qrResult.style.display = 'block';
+            
+            // Clear form
+            document.getElementById('qr-id-nasabah').value = '';
+            document.getElementById('qr-kategori').value = '';
+            document.getElementById('qr-berat').value = '';
+            document.getElementById('qr-catatan').value = '';
+        } else {
+            alert(data.message || 'Gagal membuat QR Code');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan sistem.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
 }
 </script>
 
