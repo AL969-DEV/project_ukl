@@ -12,7 +12,7 @@ $id_account = $_SESSION['id_account'];
 // Ambil data nasabah
 $qNasabah = mysqli_query($conn, "SELECT * FROM nasabah WHERE id_account = '$id_account'");
 $nasabah = mysqli_fetch_assoc($qNasabah);
-$saldo_poin = isset($nasabah['saldo_poin']) ? (int)$nasabah['saldo_poin'] : 0;
+$saldo_poin = isset($nasabah['total_poin']) ? (int)$nasabah['total_poin'] : 0;
 $level_nasabah = "Nasabah"; // Bisa diupdate dengan logika level jika ada
 
 // Ambil data hadiah (filter kategori jika ada)
@@ -24,6 +24,7 @@ if (!empty($kategori_filter)) {
 $query_reward .= " ORDER BY id_voucher DESC";
 $qRewards = mysqli_query($conn, $query_reward);
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -100,12 +101,12 @@ $qRewards = mysqli_query($conn, $query_reward);
             ?>
             
             <div class="<?= $card_class ?>">
-                <div class="katalog-card-img-wrap">
+                <div class="katalog-card-img-wrap" style="position: relative; height: 160px;">
                     <?php if (!empty($row['gambar_voucher'])): ?>
-                        <img src="../uploads/rewards/<?= htmlspecialchars($row['gambar_voucher']) ?>" class="katalog-card-img" alt="<?= htmlspecialchars($row['nama_voucher']) ?>" style="width: 100%; height: 160px; object-fit: cover; display: block;">
+                        <img src="../<?= htmlspecialchars($row['gambar_voucher']) ?>" class="katalog-card-img" alt="<?= htmlspecialchars($row['nama_voucher']) ?>" style="width: 100%; height: 160px; object-fit: cover; display: block; border-radius: 12px 12px 0 0;">
                     <?php else: ?>
-                        <div class="katalog-card-img-placeholder <?= $placeholder_class ?>">
-                            <svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 6h18" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M9 10a3 3 0 006 0" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                        <div style="background-color: #E5E7EB; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;">
+                            <span style="color: #9CA3AF; font-size: 14px; font-weight: 500;">No Image</span>
                         </div>
                     <?php endif; ?>
                     
@@ -113,6 +114,7 @@ $qRewards = mysqli_query($conn, $query_reward);
                         <span class="katalog-card-badge stok-habis" style="position: absolute; top: 12px; right: 12px; background: #EF4444; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 2;">STOK HABIS</span>
                     <?php endif; ?>
                 </div>
+
                 <div class="katalog-card-body">
                     <p class="katalog-card-kategori"><?= htmlspecialchars(ucfirst($row['kategori_voucher'])) ?></p>
                     <h3 class="katalog-card-name"><?= htmlspecialchars($row['nama_voucher']) ?></h3>

@@ -171,7 +171,7 @@ $catalog_result = mysqli_query($conn, $query_catalog);
                 <div class="card riwayat-card">
                     <div class="card-header">
                         <h2 class="card-title">Riwayat Setoran Terbaru</h2>
-                        <a href="riwayat.php" class="link-arrow">
+                        <a href="riwayat_user.php" class="link-arrow">
                             Lihat semua riwayat
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </a>

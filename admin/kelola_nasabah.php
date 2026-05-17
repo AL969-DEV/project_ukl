@@ -14,6 +14,29 @@ if (count($kata) > 1) {
     $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
 }
 
+// Handle Delete Nasabah
+if (isset($_GET['hapus'])) {
+    $id_hapus = (int)$_GET['hapus'];
+    // Ambil id_account untuk menghapus akun login juga
+    $q_acc = mysqli_query($conn, "SELECT id_account FROM nasabah WHERE id_nasabah = $id_hapus");
+    if ($q_acc && mysqli_num_rows($q_acc) > 0) {
+        $row_acc = mysqli_fetch_assoc($q_acc);
+        $id_acc = $row_acc['id_account'];
+        
+        mysqli_begin_transaction($conn);
+        try {
+            mysqli_query($conn, "DELETE FROM nasabah WHERE id_nasabah = $id_hapus");
+            mysqli_query($conn, "DELETE FROM accounts WHERE id_account = $id_acc");
+            mysqli_commit($conn);
+            echo "<script>alert('Data nasabah berhasil dihapus!'); window.location.href='kelola_nasabah.php';</script>";
+            exit;
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            echo "<script>alert('Gagal menghapus nasabah: " . mysqli_error($conn) . "'); window.location.href='kelola_nasabah.php';</script>";
+        }
+    }
+}
+
 // Ambil data nasabah dari database
 $query = "SELECT * FROM nasabah ORDER BY id_nasabah DESC";
 $result = mysqli_query($conn, $query);
@@ -127,48 +150,11 @@ $total_nasabah = mysqli_num_rows($result);
 
                 <!-- TOOLBAR -->
                 <div class="toolbar">
-                    <div class="toolbar-left">
-                        <div class="search-box toolbar-search">
+                    <div class="toolbar-left" style="width: 100%;">
+                        <div class="search-box toolbar-search" style="margin: 0; max-width: 300px;">
                             <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                            <input type="text" class="search-input" placeholder="Cari Nama">
+                            <input type="text" id="searchInput" class="search-input" placeholder="Cari Nama Nasabah..." onkeyup="searchTable()">
                         </div>
-
-                        <div class="filter-select-wrapper">
-                            <select class="filter-select">
-                                <option value="">Semua Status</option>
-                                <option value="aktif">Aktif</option>
-                                <option value="nonaktif">Non-Aktif</option>
-                            </select>
-                            <svg class="filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-
-                        <div class="filter-select-wrapper">
-                            <select class="filter-select">
-                                <option value="">Semua Wilayah</option>
-                                <option value="utara">Surabaya Utara</option>
-                                <option value="selatan">Surabaya Selatan</option>
-                                <option value="timur">Surabaya Timur</option>
-                                <option value="barat">Surabaya Barat</option>
-                            </select>
-                            <svg class="filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-
-                        <div class="filter-select-wrapper">
-                            <select class="filter-select">
-                                <option value="terbaru">Urutkan: Terbaru</option>
-                                <option value="terlama">Urutkan: Terlama</option>
-                                <option value="poin_tertinggi">Poin Tertinggi</option>
-                                <option value="poin_terendah">Poin Terendah</option>
-                            </select>
-                            <svg class="filter-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-                    </div>
-
-                    <div class="toolbar-right">
-                        <button class="btn-export">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                            Export
-                        </button>
                     </div>
                 </div>
 
@@ -234,7 +220,7 @@ $total_nasabah = mysqli_num_rows($result);
                                         <a href="#" class="btn-aksi btn-edit" title="Edit">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                         </a>
-                                        <a href="#" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Yakin ingin menghapus nasabah ini?')">
+                                        <a href="?hapus=<?php echo $row['id_nasabah']; ?>" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Yakin ingin menghapus nasabah ini?')">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                         </a>
                                     </div>
@@ -248,6 +234,10 @@ $total_nasabah = mysqli_num_rows($result);
                                 <td colspan="8" style="text-align: center; padding: 20px;">Belum ada data nasabah.</td>
                             </tr>
                             <?php endif; ?>
+                            
+                            <tr id="searchEmptyRow" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 20px;">Tidak ada nasabah yang cocok dengan pencarian.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -277,6 +267,44 @@ $total_nasabah = mysqli_num_rows($result);
         </div><!-- end page-content -->
     </div><!-- end main-content -->
 </div><!-- end app-wrapper -->
+
+<script>
+function searchTable() {
+    let input = document.getElementById("searchInput");
+    let filter = input.value.toLowerCase();
+    let table = document.querySelector(".nasabah-table tbody");
+    let tr = table.getElementsByTagName("tr");
+    let emptyRow = document.getElementById("searchEmptyRow");
+    let visibleCount = 0;
+
+    for (let i = 0; i < tr.length; i++) {
+        // Skip empty message rows
+        if (tr[i].id === "searchEmptyRow" || tr[i].querySelector("td[colspan]")) {
+            continue;
+        }
+        
+        let nameSpan = tr[i].querySelector(".nasabah-name");
+        if (nameSpan) {
+            let nameValue = nameSpan.textContent || nameSpan.innerText;
+            if (nameValue.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+                visibleCount++;
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+    
+    // Show 'no results' row if nothing found
+    if (emptyRow) {
+        if (visibleCount === 0 && filter !== "" && table.querySelectorAll("tr").length > 2) {
+            emptyRow.style.display = "";
+        } else {
+            emptyRow.style.display = "none";
+        }
+    }
+}
+</script>
 
 </body>
 </html>
