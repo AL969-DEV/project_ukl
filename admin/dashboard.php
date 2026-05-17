@@ -22,6 +22,59 @@ $result_nasabah = mysqli_query($conn, $query_nasabah);
 $row_nasabah = mysqli_fetch_assoc($result_nasabah);
 $total_nasabah = $row_nasabah['total'] ?? 0;
 
+// Total Sampah Terkumpul
+$query_sampah_total = "SELECT SUM(berat) as total_berat FROM transaksi_setor";
+$result_sampah_total = mysqli_query($conn, $query_sampah_total);
+$row_sampah_total = mysqli_fetch_assoc($result_sampah_total);
+$total_sampah = $row_sampah_total['total_berat'] ?? 0;
+
+// Setoran Sampah Bulan Ini
+$query_sampah_bulan = "SELECT SUM(berat) as total_berat_bulan FROM transaksi_setor WHERE MONTH(tgl_setor) = MONTH(CURRENT_DATE()) AND YEAR(tgl_setor) = YEAR(CURRENT_DATE())";
+$result_sampah_bulan = mysqli_query($conn, $query_sampah_bulan);
+$row_sampah_bulan = mysqli_fetch_assoc($result_sampah_bulan);
+$sampah_bulan_ini = $row_sampah_bulan['total_berat_bulan'] ?? 0;
+
+// Total Poin Beredar
+$query_poin_beredar = "SELECT SUM(total_poin) as total_poin_beredar FROM nasabah";
+$result_poin_beredar = mysqli_query($conn, $query_poin_beredar);
+$row_poin_beredar = mysqli_fetch_assoc($result_poin_beredar);
+$total_poin_beredar = $row_poin_beredar['total_poin_beredar'] ?? 0;
+
+// Poin di-redeem bulan ini
+$query_poin_redeem = "SELECT SUM(v.biaya_poin) as poin_redeem FROM log_penukaran lp JOIN voucher_reward v ON lp.id_voucher = v.id_voucher WHERE MONTH(lp.tgl_tukar) = MONTH(CURRENT_DATE()) AND YEAR(lp.tgl_tukar) = YEAR(CURRENT_DATE())";
+$result_poin_redeem = mysqli_query($conn, $query_poin_redeem);
+$row_poin_redeem = mysqli_fetch_assoc($result_poin_redeem);
+$poin_redeem_bulan_ini = $row_poin_redeem['poin_redeem'] ?? 0;
+
+// Menghitung jumlah transaksi pending
+$query_pending = "SELECT COUNT(*) as pending_count FROM transaksi_setor WHERE status = 'pending'";
+$result_pending = mysqli_query($conn, $query_pending);
+$row_pending = mysqli_fetch_assoc($result_pending);
+$pending_count = $row_pending['pending_count'] ?? 0;
+
+// Kategori Berat Sampah
+$query_berat_kategori = "SELECT ks.nama_sampah, SUM(ts.berat) as total_berat FROM kategori_sampah ks LEFT JOIN transaksi_setor ts ON ks.id_kategori = ts.id_kategori GROUP BY ks.id_kategori";
+$result_berat_kategori = mysqli_query($conn, $query_berat_kategori);
+$berat_per_kategori = [
+    'Plastik' => 0,
+    'Kertas' => 0,
+    'Logam' => 0,
+    'Kaca & Lainnya' => 0
+];
+while ($row = mysqli_fetch_assoc($result_berat_kategori)) {
+    $nama = strtolower($row['nama_sampah']);
+    $berat = $row['total_berat'] ?? 0;
+    if (strpos($nama, 'plastik') !== false) {
+        $berat_per_kategori['Plastik'] += $berat;
+    } elseif (strpos($nama, 'kertas') !== false || strpos($nama, 'kardus') !== false) {
+        $berat_per_kategori['Kertas'] += $berat;
+    } elseif (strpos($nama, 'logam') !== false || strpos($nama, 'besi') !== false) {
+        $berat_per_kategori['Logam'] += $berat;
+    } else {
+        $berat_per_kategori['Kaca & Lainnya'] += $berat;
+    }
+}
+
 $query_kat = "SELECT * FROM kategori_sampah ORDER BY id_kategori ASC";
 $result_kat = mysqli_query($conn, $query_kat);
 
@@ -31,6 +84,18 @@ $query_trx = "SELECT ts.*, n.nama_lengkap, n.id_nasabah, ks.nama_sampah, ks.poin
               LEFT JOIN kategori_sampah ks ON ts.id_kategori = ks.id_kategori
               ORDER BY ts.tgl_setor DESC LIMIT 10";
 $result_trx = mysqli_query($conn, $query_trx);
+
+$hari_inggris = date('l');
+$hari_indo = [
+    'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+];
+$bulan_indo = [
+    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+];
+$tanggal_sekarang = $hari_indo[$hari_inggris] . ', ' . date('d') . ' ' . $bulan_indo[(int)date('m')] . ' ' . date('Y');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -85,7 +150,7 @@ $result_trx = mysqli_query($conn, $query_trx);
             <div class="page-title-section">
                 <p class="page-breadcrumb-text">Dashboard</p>
                 <h1 class="page-title">Selamat Datang, <?php echo htmlspecialchars($nama_admin); ?></h1>
-                <p class="page-subtitle">Ringkasan aktivitas bank sampah hari ini–Kamis, 17 April 2026</p>
+                <p class="page-subtitle">Ringkasan aktivitas bank sampah hari ini–<?php echo $tanggal_sekarang; ?></p>
             </div>
 
             <!-- STAT CARDS ROW -->
@@ -106,9 +171,9 @@ $result_trx = mysqli_query($conn, $query_trx);
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3C8 3 5 6 5 10c0 3.5 2.5 6.5 7 10 4.5-3.5 7-6.5 7-10 0-4-3-7-7-7z" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v0m0 0a2 2 0 100-4 2 2 0 000 4z" stroke="#16A34A" stroke-width="2"/></svg>
                     </div>
                     <div class="stat-card-body">
-                        <p class="stat-card-value">10.356 <span class="stat-unit">Kg</span></p>
+                        <p class="stat-card-value"><?php echo number_format($total_sampah, 2, ',', '.'); ?> <span class="stat-unit">Kg</span></p>
                         <p class="stat-card-label green">Total Sampah Terkumpul</p>
-                        <p class="stat-card-sub">Setoran bulan ini: 1.148 Kg</p>
+                        <p class="stat-card-sub">Setoran bulan ini: <?php echo number_format($sampah_bulan_ini, 2, ',', '.'); ?> Kg</p>
                     </div>
                 </div>
 
@@ -117,9 +182,9 @@ $result_trx = mysqli_query($conn, $query_trx);
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#EAB308" stroke-width="2" stroke-linejoin="round"/></svg>
                     </div>
                     <div class="stat-card-body">
-                        <p class="stat-card-value">786.000</p>
+                        <p class="stat-card-value"><?php echo number_format($total_poin_beredar, 0, ',', '.'); ?></p>
                         <p class="stat-card-label yellow">Total Poin Beredar</p>
-                        <p class="stat-card-sub">Poin di-redeem bulan ini: 18.500</p>
+                        <p class="stat-card-sub">Poin di-redeem bulan ini: <?php echo number_format($poin_redeem_bulan_ini, 0, ',', '.'); ?></p>
                     </div>
                 </div>
             </div>
@@ -128,19 +193,19 @@ $result_trx = mysqli_query($conn, $query_trx);
             <div class="category-cards-row">
                 <div class="category-card plastik">
                     <p class="category-card-label">Plastik</p>
-                    <p class="category-card-value">7.879 Kg</p>
+                    <p class="category-card-value"><?php echo number_format($berat_per_kategori['Plastik'], 2, ',', '.'); ?> Kg</p>
                 </div>
                 <div class="category-card kertas">
                     <p class="category-card-label">Kertas</p>
-                    <p class="category-card-value">3.267 Kg</p>
+                    <p class="category-card-value"><?php echo number_format($berat_per_kategori['Kertas'], 2, ',', '.'); ?> Kg</p>
                 </div>
                 <div class="category-card logam">
                     <p class="category-card-label">Logam</p>
-                    <p class="category-card-value">6.823 Kg</p>
+                    <p class="category-card-value"><?php echo number_format($berat_per_kategori['Logam'], 2, ',', '.'); ?> Kg</p>
                 </div>
                 <div class="category-card kaca">
                     <p class="category-card-label">Kaca & Lainnya</p>
-                    <p class="category-card-value">5.287 Kg</p>
+                    <p class="category-card-value"><?php echo number_format($berat_per_kategori['Kaca & Lainnya'], 2, ',', '.'); ?> Kg</p>
                 </div>
             </div>
 
@@ -203,7 +268,7 @@ $result_trx = mysqli_query($conn, $query_trx);
                     <div class="panel-header">
                         <div>
                             <h2 class="panel-title">Transaksi Terbaru</h2>
-                            <p class="panel-subtitle">12 Transaksi menunggu konfirmasi</p>
+                            <p class="panel-subtitle"><?php echo $pending_count; ?> Transaksi menunggu konfirmasi</p>
                         </div>
                         <div class="tab-group">
                             <button class="tab-btn active">Semua</button>

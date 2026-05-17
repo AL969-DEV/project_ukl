@@ -55,18 +55,6 @@
             </li>
         </ul>
 
-        <p class="nav-section-label">LAPORAN</p>
-        <ul class="nav-list">
-
-            <li class="nav-item <?php echo (isset($active_page) && $active_page == 'peringkat') ? 'active' : ''; ?>">
-                <a href="peringkat_nasabah.php" class="nav-link">
-                    <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    </span>
-                    Peringkat Nasabah
-                </a>
-            </li>
-        </ul>
     </nav>
 
     <div class="sidebar-footer">
