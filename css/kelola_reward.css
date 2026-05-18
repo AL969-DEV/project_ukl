@@ -412,3 +412,17 @@
 }
 
 .btn-delete:hover { background-color: #FEE2E2; }
+
+/* Table Footer Styling */
+.table-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.table-info {
+    font-size: 13px;
+    color: var(--text-muted);
+}

@@ -7,13 +7,6 @@ if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-$nama_admin = $_SESSION['nama_lengkap'] ?? 'Admin';
-$inisial = strtoupper(substr($nama_admin, 0, 1));
-$kata = explode(" ", $nama_admin);
-if (count($kata) > 1) {
-    $inisial = strtoupper(substr($kata[0], 0, 1) . substr($kata[1], 0, 1));
-}
-
 // -------------------------
 // PROSES HAPUS
 // -------------------------
@@ -136,8 +129,21 @@ $stok_hampir_habis = $qHampirHabis ? mysqli_fetch_assoc($qHampirHabis)['total'] 
 $qHabis = mysqli_query($conn, "SELECT COUNT(*) AS total FROM voucher_reward WHERE stok_voucher = 0");
 $stok_habis = $qHabis ? mysqli_fetch_assoc($qHabis)['total'] : 0;
 
-// Untuk Tabel
-$qRewards = mysqli_query($conn, "SELECT * FROM voucher_reward ORDER BY id_voucher DESC");
+// Untuk Tabel (Search & Filter)
+$search_query = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
+$kategori_filter = isset($_GET['filter_kategori']) ? mysqli_real_escape_string($conn, $_GET['filter_kategori']) : '';
+
+$where_clauses = [];
+if (!empty($search_query)) {
+    $where_clauses[] = "nama_voucher LIKE '%$search_query%'";
+}
+if (!empty($kategori_filter) && $kategori_filter !== 'Semua Kategori') {
+    $where_clauses[] = "kategori_voucher = '$kategori_filter'";
+}
+
+$where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
+
+$qRewards = mysqli_query($conn, "SELECT * FROM voucher_reward $where_sql ORDER BY id_voucher DESC");
 $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
 ?>
 
@@ -161,32 +167,7 @@ $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
 
     <div class="main-content">
 
-        <header class="top-header">
-            <div class="header-left">
-                <span class="header-breadcrumb">
-                    <span style="color:var(--green-primary);font-weight:800;">Admin</span> <span style="color:var(--text-secondary);font-weight:500;">Panel</span>
-                </span>
-            </div>
-            <div class="header-center">
-                <div class="search-box">
-                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                    <input type="text" class="search-input" placeholder="Cari nasabah, transaksi...">
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="notif-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span class="notif-dot"></span>
-                </button>
-                <div class="user-profile">
-                    <div class="user-avatar"><?= $inisial ?></div>
-                    <div class="user-info">
-                        <span class="user-name"><?= htmlspecialchars($nama_admin) ?></span>
-                        <span class="user-role">Super Admin</span>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <?php include '../includes/header_admin.php'; ?>
 
         <!-- PAGE CONTENT -->
         <div class="page-content">
@@ -393,22 +374,24 @@ $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
                         </div>
 
                         <!-- Toolbar -->
-                        <div class="kr-toolbar">
+                        <form method="GET" action="kelola_reward.php" class="kr-toolbar">
                             <div class="search-box kr-search">
                                 <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                                <input type="text" class="search-input" placeholder="Cari nama hadiah...">
+                                <input type="text" name="search" class="search-input" placeholder="Cari nama hadiah..." value="<?= htmlspecialchars($search_query ?? '') ?>" onchange="this.form.submit()">
                             </div>
                             <div class="kr-filter-wrap">
-                                <select class="kr-filter-select">
-                                    <option>Semua Kategori</option>
-                                    <option>Pulsa</option>
-                                    <option>E-Wallet</option>
-                                    <option>Token Listrik</option>
-                                    <option>Sembako</option>
+                                <select name="filter_kategori" class="kr-filter-select" onchange="this.form.submit()">
+                                    <option value="Semua Kategori" <?= (empty($kategori_filter) || $kategori_filter == 'Semua Kategori') ? 'selected' : '' ?>>Semua Kategori</option>
+                                    <option value="pulsa" <?= ($kategori_filter == 'pulsa') ? 'selected' : '' ?>>Pulsa</option>
+                                    <option value="ewallet" <?= ($kategori_filter == 'ewallet') ? 'selected' : '' ?>>E-Wallet</option>
+                                    <option value="listrik" <?= ($kategori_filter == 'listrik') ? 'selected' : '' ?>>Token Listrik</option>
+                                    <option value="sembako" <?= ($kategori_filter == 'sembako') ? 'selected' : '' ?>>Sembako</option>
+                                    <option value="voucher" <?= ($kategori_filter == 'voucher') ? 'selected' : '' ?>>Voucher Belanja</option>
+                                    <option value="lainnya" <?= ($kategori_filter == 'lainnya') ? 'selected' : '' ?>>Lainnya</option>
                                 </select>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" class="kr-select-arrow"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
-                        </div>
+                        </form>
 
                         <div class="kr-divider"></div>
 
