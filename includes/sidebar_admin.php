@@ -54,7 +54,6 @@
                 </a>
             </li>
         </ul>
-
     </nav>
 
     <div class="sidebar-footer">

@@ -137,10 +137,8 @@ $qRewards = mysqli_query($conn, $query_reward);
                 <div class="katalog-card-footer">
                     <?php if (!$has_stock): ?>
                         <button class="katalog-btn-tukar disabled" disabled>STOK HABIS</button>
-                    <?php elseif (!$can_afford): ?>
-                        <button class="katalog-btn-tukar disabled" disabled>POIN TIDAK CUKUP</button>
                     <?php else: ?>
-                        <button class="katalog-btn-tukar" onclick="window.location.href='proses_tukar.php?id=<?= $row['id_voucher'] ?>'">TUKAR SEKARANG</button>
+                        <button class="katalog-btn-tukar" onclick="tukarPoin(<?= $row['id_voucher'] ?>)">TUKAR SEKARANG</button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -158,6 +156,62 @@ $qRewards = mysqli_query($conn, $query_reward);
 </main>
 
 <?php include '../includes/footer_user.php'; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function tukarPoin(idVoucher) {
+    Swal.fire({
+        title: 'Konfirmasi Penukaran',
+        text: "Apakah kamu yakin ingin menukar poin dengan hadiah ini?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#16A34A',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Tukar!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Menukar poin...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const formData = new FormData();
+            formData.append('id_voucher', idVoucher);
+
+            fetch('ajax_tukar_poin.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        confirmButtonColor: '#16A34A'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: data.message || 'Terjadi kesalahan'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Koneksi ke server gagal.', 'error');
+            });
+        }
+    })
+}
+</script>
 
 </body>
 </html>

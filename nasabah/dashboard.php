@@ -33,15 +33,6 @@ mysqli_stmt_bind_param($stmt_riwayat, "i", $id_nasabah);
 mysqli_stmt_execute($stmt_riwayat);
 $riwayat_result = mysqli_stmt_get_result($stmt_riwayat);
 
-// Get total sampah disetor bulan ini
-$query_total_sampah = "SELECT SUM(berat) as total_berat FROM transaksi_setor WHERE id_profile = ? AND status = 'claimed' AND MONTH(tgl_setor) = MONTH(CURRENT_DATE()) AND YEAR(tgl_setor) = YEAR(CURRENT_DATE())";
-$stmt_sampah = mysqli_prepare($conn, $query_total_sampah);
-mysqli_stmt_bind_param($stmt_sampah, "i", $id_nasabah);
-mysqli_stmt_execute($stmt_sampah);
-$sampah_result = mysqli_stmt_get_result($stmt_sampah);
-$sampah_row = mysqli_fetch_assoc($sampah_result);
-$total_sampah_kg = $sampah_row['total_berat'] ?? 0;
-
 // Get total penukaran
 $query_tukar = "SELECT COUNT(*) as total_tukar FROM log_penukaran WHERE id_profile = ?";
 $stmt_tukar = mysqli_prepare($conn, $query_tukar);
@@ -220,28 +211,6 @@ $catalog_result = mysqli_query($conn, $query_catalog);
             <!-- ── RIGHT COLUMN ── -->
             <div class="col-right">
 
-                <!-- Total Sampah Disetor -->
-                <div class="card stat-card">
-                    <p class="stat-card-label">TOTAL SAMPAH DISETOR</p>
-                    <div class="sampah-big-num">
-                        <?php echo number_format($total_sampah_kg, 1, ',', '.'); ?>
-                    </div>
-                    <p class="sampah-unit-label">Kilogram bulan ini</p>
-                    <div class="progress-wrap">
-                        <div class="progress-bar">
-                            <?php 
-                            $target = 50; 
-                            $percent = min(100, round(($total_sampah_kg / $target) * 100)); 
-                            ?>
-                            <div class="progress-fill" style="width: <?php echo $percent; ?>%;"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span>0 Kg</span>
-                            <span><?php echo $percent; ?>% dari target <?php echo $target; ?> kg</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Jumlah Penukaran Voucher -->
                 <div class="card stat-card">
                     <p class="stat-card-label">JUMLAH PENUKARAN VOUCHER</p>
@@ -263,22 +232,6 @@ $catalog_result = mysqli_query($conn, $query_catalog);
                     </div>
                 </div>
 
-                <!-- Peringkat Lingkungan -->
-                <div class="card stat-card peringkat-card">
-                    <p class="stat-card-label">PERINGKAT LINGKUNGAN</p>
-                    <div class="peringkat-big-num">
-                        #3
-                    </div>
-                    <p class="peringkat-sub">
-                        Dari 248 nasabah aktif
-                    </p>
-                    <p class="peringkat-hint">
-                        Butuh 1.700 poin lagi untuk menuju peringkat #1
-                    </p>
-                    <a href="peringkat.php" class="peringkat-arrow-link">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </a>
-                </div>
 
             </div>
 
@@ -309,7 +262,7 @@ $catalog_result = mysqli_query($conn, $query_catalog);
                             <p class="hadiah-name"><?php echo htmlspecialchars($cat['nama_voucher']); ?></p>
                             <p class="hadiah-desc"><?php echo htmlspecialchars($cat['deskripsi'] ?? ''); ?></p>
                             <p class="hadiah-poin">Harga: <strong><?php echo number_format($cat['biaya_poin'] ?? 0, 0, ',', '.'); ?> poin</strong></p>
-                            <a href="tukar_poin.php" class="btn-tukar" style="display:block;text-align:center;text-decoration:none;">Tukar Sekarang</a>
+                            <button type="button" onclick="tukarPoin(<?php echo $cat['id_voucher']; ?>)" class="btn-tukar" style="display:block; width:100%; text-align:center; text-decoration:none; border:none; cursor:pointer; font-family:inherit; font-size:inherit;">Tukar Sekarang</button>
                         </div>
                     </div>
                     <?php endwhile; ?>
@@ -419,6 +372,59 @@ function claimPoints(id_setor) {
         console.error(err);
         Swal.fire('Error', 'Koneksi ke server gagal.', 'error');
     });
+}
+
+function tukarPoin(idVoucher) {
+    Swal.fire({
+        title: 'Konfirmasi Penukaran',
+        text: "Apakah kamu yakin ingin menukar poin dengan hadiah ini?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#16A34A',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Tukar!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Menukar poin...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const formData = new FormData();
+            formData.append('id_voucher', idVoucher);
+
+            fetch('ajax_tukar_poin.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        confirmButtonColor: '#16A34A'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: data.message || 'Terjadi kesalahan'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Koneksi ke server gagal.', 'error');
+            });
+        }
+    })
 }
 </script>
 
