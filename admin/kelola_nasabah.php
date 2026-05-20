@@ -30,8 +30,17 @@ if (isset($_GET['hapus'])) {
     }
 }
 
-// Ambil data nasabah dari database
-$query = "SELECT * FROM nasabah ORDER BY id_nasabah DESC";
+// Total Poin Beredar
+$q_poin = mysqli_query($conn, "SELECT SUM(total_poin) as sum_poin FROM nasabah");
+$row_poin = mysqli_fetch_assoc($q_poin);
+$total_poin_beredar = $row_poin['sum_poin'] ?? 0;
+
+// Ambil data nasabah dan total sampahnya
+$query = "SELECT n.*, a.username, 
+          (SELECT SUM(berat) FROM transaksi_setor ts WHERE ts.id_profile = n.id_nasabah AND ts.status = 'claimed') as total_sampah 
+          FROM nasabah n 
+          LEFT JOIN accounts a ON n.id_account = a.id_account
+          ORDER BY n.id_nasabah DESC";
 $result = mysqli_query($conn, $query);
 $total_nasabah = mysqli_num_rows($result);
 ?>
@@ -88,7 +97,7 @@ $total_nasabah = mysqli_num_rows($result);
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#16A34A" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                     <div class="summary-card-body">
-                        <p class="summary-card-value">221</p>
+                        <p class="summary-card-value"><?php echo $total_nasabah; ?></p>
                         <p class="summary-card-label">Nasabah Aktif</p>
                     </div>
                 </div>
@@ -98,7 +107,7 @@ $total_nasabah = mysqli_num_rows($result);
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#3B82F6" stroke-width="2"/><path d="M3 10h18" stroke="#3B82F6" stroke-width="2"/><path d="M8 2v4M16 2v4" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/></svg>
                     </div>
                     <div class="summary-card-body">
-                        <p class="summary-card-value">12</p>
+                        <p class="summary-card-value">-</p>
                         <p class="summary-card-label">Bergabung Bulan Ini</p>
                     </div>
                 </div>
@@ -108,7 +117,7 @@ $total_nasabah = mysqli_num_rows($result);
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#F59E0B" stroke-width="2" stroke-linejoin="round"/></svg>
                     </div>
                     <div class="summary-card-body">
-                        <p class="summary-card-value" style="color: #F59E0B;">892K</p>
+                        <p class="summary-card-value" style="color: #F59E0B;"><?php echo number_format($total_poin_beredar, 0, ',', '.'); ?></p>
                         <p class="summary-card-label">Total poin beredar</p>
                     </div>
                 </div>
@@ -168,7 +177,7 @@ $total_nasabah = mysqli_num_rows($result);
                                 </td>
                                 <td>
                                     <div class="kontak-cell">
-                                        <span class="kontak-email"><?php echo htmlspecialchars($row['email'] ?? '-'); ?></span>
+                                        <span class="kontak-email"><?php echo htmlspecialchars($row['username'] ?? '-'); ?></span>
                                         <span class="kontak-phone"><?php echo htmlspecialchars($row['no_telp'] ?? '-'); ?></span>
                                     </div>
                                 </td>
@@ -178,15 +187,13 @@ $total_nasabah = mysqli_num_rows($result);
                                         <span class="poin-value"><?php echo number_format($row['total_poin'], 0, ',', '.'); ?></span>
                                     </div>
                                 </td>
-                                <td class="sampah-cell">0 <span class="unit">kg</span></td>
+                                <td class="sampah-cell"><?php echo number_format($row['total_sampah'] ?? 0, 2, ',', '.'); ?> <span class="unit">kg</span></td>
                                 <td><span class="status-badge aktif">Aktif</span></td>
-                                <td class="bergabung-cell">Baru</td>
+                                <td class="bergabung-cell">-</td>
                                 <td>
                                     <div class="aksi-cell">
-                                        <a href="#" class="btn-aksi btn-detail" title="Detail">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                                        </a>
-                                        <a href="#" class="btn-aksi btn-edit" title="Edit">
+
+                                        <a href="edit_nasabah.php?id=<?php echo $row['id_nasabah']; ?>" class="btn-aksi btn-edit" title="Edit">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                         </a>
                                         <a href="?hapus=<?php echo $row['id_nasabah']; ?>" class="btn-aksi btn-delete" title="Hapus" onclick="return confirm('Yakin ingin menghapus nasabah ini?')">
@@ -213,17 +220,13 @@ $total_nasabah = mysqli_num_rows($result);
 
                 <!-- TABLE FOOTER / PAGINATION -->
                 <div class="table-footer">
-                    <span class="table-info">Menampilkan <strong>1–9</strong> dari <strong>248</strong> nasabah</span>
-                    <div class="pagination">
+                    <span class="table-info">Menampilkan <strong><?php echo $total_nasabah; ?></strong> nasabah</span>
+                    <div class="pagination" style="display: none;">
                         <button class="page-btn page-prev" disabled>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             Previous
                         </button>
                         <button class="page-btn active">1</button>
-                        <button class="page-btn">2</button>
-                        <button class="page-btn">3</button>
-                        <span class="page-ellipsis">...</span>
-                        <button class="page-btn">149</button>
                         <button class="page-btn page-next">
                             Berikutnya
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>

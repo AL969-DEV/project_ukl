@@ -222,7 +222,7 @@ $catalog_result = mysqli_query($conn, $query_catalog);
                         <?php if(mysqli_num_rows($voucher_result) > 0): ?>
                             <?php while($v = mysqli_fetch_assoc($voucher_result)): ?>
                             <div class="voucher-item">
-                                <span class="voucher-name"><?php echo htmlspecialchars($v['nama_reward']); ?></span>
+                                <span class="voucher-name"><?php echo htmlspecialchars($v['nama_voucher'] ?? ''); ?></span>
                                 <span class="voucher-badge aktif">Aktif</span>
                             </div>
                             <?php endwhile; ?>

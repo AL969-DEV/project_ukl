@@ -237,11 +237,6 @@ $tanggal_sekarang = $hari_indo[$hari_inggris] . ', ' . date('d') . ' ' . $bulan_
                             <h2 class="panel-title">Transaksi Terbaru</h2>
                             <p class="panel-subtitle"><?php echo $pending_count; ?> Transaksi menunggu konfirmasi</p>
                         </div>
-                        <div class="tab-group">
-                            <button class="tab-btn active">Semua</button>
-                            <button class="tab-btn">Hari ini</button>
-                            <button class="tab-btn">Selesai</button>
-                        </div>
                     </div>
 
                     <div class="table-wrapper">

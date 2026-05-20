@@ -35,17 +35,7 @@
             </ul>
         </div>
 
-        <!-- ── Kolom 3: Panduan ── -->
-        <div class="footer-col">
-            <h3 class="footer-col-title">PANDUAN</h3>
-            <ul class="footer-links">
-                <li><a href="#" class="footer-link">Cara Setor Sampah</a></li>
-                <li><a href="#" class="footer-link">Cara Tukar Poin</a></li>
-                <li><a href="#" class="footer-link">Daftar Jadi Nasabah</a></li>
-                <li><a href="#" class="footer-link">FAQ</a></li>
-                <li><a href="#" class="footer-link">Syarat &amp; Ketentuan</a></li>
-            </ul>
-        </div>
+
 
         <!-- ── Kolom 4: Hubungi Kami ── -->
         <div class="footer-col">

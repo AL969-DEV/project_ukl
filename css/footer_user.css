@@ -32,7 +32,7 @@ html, body {
     margin: 0 auto;
     padding: 40px 24px 32px;
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1.2fr 1.3fr;
+    grid-template-columns: 2fr 1fr 1.5fr;
     gap: 36px 48px;
 }
 
