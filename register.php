@@ -6,11 +6,11 @@ if (isset($_POST['register'])) {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     
     $query = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', 'user')";
-
     if (mysqli_query($conn, $query)) {
         echo "<script>alert('Akun berhasil dibuat! Silakan login untuk melanjutkan.'); window.location.href='login.php';</script>";
     } else {
         echo "Error: " . mysqli_error($conn);
+        }
     }
 }
 ?>
