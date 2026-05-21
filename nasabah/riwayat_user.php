@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'nasabah') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
@@ -40,31 +40,9 @@ mysqli_stmt_execute($stmt_ts3);
 $total_poin = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_ts3))['total'] ?? 0;
 
 
-$filter_tgl = $_GET['tanggal'] ?? '';
-$filter_kategori = $_GET['kategori'] ?? '';
-$filter_status = $_GET['status'] ?? '';
-
-$where_clauses = ["ts.id_profile = ?"];
+$where_sql = "ts.id_profile = ?";
 $params = [$id_nasabah];
 $types = "i";
-
-if (!empty($filter_tgl)) {
-    $where_clauses[] = "DATE(ts.tgl_setor) = ?";
-    $params[] = $filter_tgl;
-    $types .= "s";
-}
-if (!empty($filter_kategori)) {
-    $where_clauses[] = "ks.nama_sampah LIKE ?";
-    $params[] = "%$filter_kategori%";
-    $types .= "s";
-}
-if (!empty($filter_status)) {
-    $where_clauses[] = "ts.status = ?";
-    $params[] = $filter_status;
-    $types .= "s";
-}
-
-$where_sql = implode(" AND ", $where_clauses);
 
 // Count total records for pagination
 $count_sql = "SELECT COUNT(*) as total FROM transaksi_setor ts 
@@ -138,47 +116,7 @@ $result_data = mysqli_stmt_get_result($stmt_data);
                 <p class="riwayat-stat-unit">Poin diterima</p>
             </div>
         </div>
-        <form method="GET" action="" class="riwayat-filter-bar">
-            <div class="riwayat-filter-date-wrap">
-                <input type="date" name="tanggal" class="riwayat-filter-input riwayat-date-input"
-                    value="<?= htmlspecialchars($filter_tgl) ?>">
-                <svg class="riwayat-date-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.8"/>
-                    <path d="M3 10h18M8 2v4M16 2v4" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-            </div>
-
-            <div class="riwayat-filter-select-wrap">
-                <select name="kategori" class="riwayat-filter-input riwayat-select-input">
-                    <option value="">Semua Kategori</option>
-                    <option value="Plastik" <?= stripos($filter_kategori, 'Plastik') !== false ? 'selected' : '' ?>>Plastik PET</option>
-                    <option value="Kertas" <?= stripos($filter_kategori, 'Kertas') !== false ? 'selected' : '' ?>>Kertas / Kardus</option>
-                    <option value="Logam" <?= stripos($filter_kategori, 'Logam') !== false ? 'selected' : '' ?>>Logam / Besi</option>
-                    <option value="Kaca" <?= stripos($filter_kategori, 'Kaca') !== false ? 'selected' : '' ?>>Kaca / Botol</option>
-                    <option value="Elektronik" <?= stripos($filter_kategori, 'Elektronik') !== false ? 'selected' : '' ?>>Elektronik</option>
-                </select>
-                <svg class="riwayat-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-
-            <div class="riwayat-filter-select-wrap">
-                <select name="status" class="riwayat-filter-input riwayat-select-input">
-                    <option value="">Semua Status</option>
-                    <option value="claimed" <?= $filter_status == 'claimed' ? 'selected' : '' ?>>Selesai</option>
-                    <option value="pending" <?= $filter_status == 'pending' ? 'selected' : '' ?>>Pending</option>
-                </select>
-                <svg class="riwayat-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-
-            <button type="submit" class="riwayat-btn-reset">Filter</button>
-            <?php if (!empty($_GET)): ?>
-                <a href="riwayat_user.php" class="riwayat-btn-reset" style="background-color:#f3f4f6; color:#374151; text-decoration:none; margin-left:8px;">Reset</a>
-            <?php endif; ?>
-        </form>
-        <!-- ── Tabel Transaksi ── -->
+<!-- ── Tabel Transaksi ── -->
         <div class="riwayat-table-card">
 
             <div class="riwayat-table-card-header">

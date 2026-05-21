@@ -3,7 +3,7 @@ session_start();
 include '../includes/config.php';
 
 if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'nasabah') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 

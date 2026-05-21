@@ -25,19 +25,19 @@ if (count($kata_nav) > 1) {
             <a href="tentang.php" class="nav-link <?= ($currentPage == 'tentang.php') ? 'active' : '' ?>">Tentang</a>
         </nav>
 
-        <!-- Right: Notif + User -->
+        <!-- Right: User Profile -->
         <div class="navbar-right">
-            <button class="notif-btn" aria-label="Notifikasi">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-                <span class="notif-dot"></span>
-            </button>
             <div class="navbar-user">
                 <div class="navbar-avatar"><?= htmlspecialchars($inisial_nav) ?></div>
                 <span class="navbar-username"><?= htmlspecialchars($nama_user_nav) ?></span>
             </div>
+            <a href="../logout.php" class="logout-btn" aria-label="Keluar" onclick="return confirm('Apakah Anda yakin ingin keluar?')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
         </div>
 
     </div>

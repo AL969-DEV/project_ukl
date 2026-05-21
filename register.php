@@ -6,11 +6,10 @@ if (isset($_POST['register'])) {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     
     $query = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', 'user')";
-    if (mysqli_query($conn, $query)) {
-        echo "<script>alert('Akun berhasil dibuat! Silakan login untuk melanjutkan.'); window.location.href='login.php';</script>";
-    } else {
+            if (mysqli_query($conn, $query)) {
+                echo "<script>alert('Akun berhasil dibuat! Silakan login untuk melanjutkan.'); window.location.href='index.php';</script>";
+            } else {
         echo "Error: " . mysqli_error($conn);
-        }
     }
 }
 ?>
@@ -58,7 +57,7 @@ if (isset($_POST['register'])) {
           </div>
           <div class="frame-div">
             <div class="frame-parent2">
-              <button class="masuk-wrapper" type="button" onclick="window.location.href='login.php'">
+              <button class="masuk-wrapper" type="button" onclick="window.location.href='index.php'">
                 <div class="masuk">Masuk</div>
               </button>
               <button class="daftar-wrapper" type="button">
@@ -70,7 +69,7 @@ if (isset($_POST['register'])) {
             <h3 class="buat-akun-baru">Buat Akun Baru</h3>
             <div class="sudah-punya-akun-container">
               <span class="solusi">Sudah punya akun? </span>
-              <span class="sampah" style="cursor: pointer;" onclick="window.location.href='login.php'">Masuk di sini</span>
+              <span class="sampah" style="cursor: pointer;" onclick="window.location.href='index.php'">Masuk di sini</span>
             </div>
           </div>
           <div class="nama-lengkap-parent">

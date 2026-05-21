@@ -31,7 +31,7 @@
                 <li><a href="dashboard.php" class="footer-link">Beranda</a></li>
                 <li><a href="riwayat_user.php" class="footer-link">Riwayat Setoran</a></li>
                 <li><a href="tukar_poin.php" class="footer-link">Tukar Poin</a></li>
-                <li><a href="#" class="footer-link">Tentang</a></li>
+                <li><a href="tentang.php" class="footer-link">Tentang</a></li>
             </ul>
         </div>
 
