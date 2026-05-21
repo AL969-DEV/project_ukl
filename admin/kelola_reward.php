@@ -374,24 +374,24 @@ $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
                         </div>
 
                         <!-- Toolbar -->
-                        <form method="GET" action="kelola_reward.php" class="kr-toolbar">
+                        <div class="kr-toolbar">
                             <div class="search-box kr-search">
                                 <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                                <input type="text" name="search" class="search-input" placeholder="Cari nama hadiah..." value="<?= htmlspecialchars($search_query ?? '') ?>" onchange="this.form.submit()">
+                                <input type="text" id="searchInput" class="search-input" placeholder="Cari nama hadiah..." autocomplete="off">
                             </div>
                             <div class="kr-filter-wrap">
-                                <select name="filter_kategori" class="kr-filter-select" onchange="this.form.submit()">
-                                    <option value="Semua Kategori" <?= (empty($kategori_filter) || $kategori_filter == 'Semua Kategori') ? 'selected' : '' ?>>Semua Kategori</option>
-                                    <option value="pulsa" <?= ($kategori_filter == 'pulsa') ? 'selected' : '' ?>>Pulsa</option>
-                                    <option value="ewallet" <?= ($kategori_filter == 'ewallet') ? 'selected' : '' ?>>E-Wallet</option>
-                                    <option value="listrik" <?= ($kategori_filter == 'listrik') ? 'selected' : '' ?>>Token Listrik</option>
-                                    <option value="sembako" <?= ($kategori_filter == 'sembako') ? 'selected' : '' ?>>Sembako</option>
-                                    <option value="voucher" <?= ($kategori_filter == 'voucher') ? 'selected' : '' ?>>Voucher Belanja</option>
-                                    <option value="lainnya" <?= ($kategori_filter == 'lainnya') ? 'selected' : '' ?>>Lainnya</option>
+                                <select id="categoryFilter" class="kr-filter-select">
+                                    <option value="Semua Kategori">Semua Kategori</option>
+                                    <option value="pulsa">Pulsa</option>
+                                    <option value="ewallet">E-Wallet</option>
+                                    <option value="listrik">Token Listrik</option>
+                                    <option value="sembako">Sembako</option>
+                                    <option value="voucher">Voucher Belanja</option>
+                                    <option value="lainnya">Lainnya</option>
                                 </select>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" class="kr-select-arrow"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
-                        </form>
+                        </div>
 
                         <div class="kr-divider"></div>
 
@@ -418,7 +418,9 @@ $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
                                             if ($row['stok_voucher'] == 0) $stok_class = 'empty';
                                             elseif ($row['stok_voucher'] <= 10) $stok_class = 'low';
                                     ?>
-                                    <tr>
+                                    <tr data-nama="<?= htmlspecialchars(strtolower($row['nama_voucher'])) ?>"
+                                        data-deskripsi="<?= htmlspecialchars(strtolower($row['deskripsi'])) ?>"
+                                        data-kategori="<?= htmlspecialchars(strtolower($row['kategori_voucher'])) ?>">
                                         <td class="td-no"><?= $no++ ?></td>
                                         <td class="td-img">
                                             <?php if (!empty($row['gambar_voucher'])): ?>
@@ -466,24 +468,8 @@ $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
                         </div>
 
                         <div class="table-footer">
-                            <span class="table-info">Menampilkan <strong><?= $total_tampil ?></strong> hadiah</span>
-                            <!--
-                            <div class="pagination">
-                                <button class="page-btn page-prev" disabled>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    Previous
-                                </button>
-                                <button class="page-btn active">1</button>
-                                <button class="page-btn">2</button>
-                                <button class="page-btn">3</button>
-                                <span class="page-ellipsis">...</span>
-                                <button class="page-btn">6</button>
-                                <button class="page-btn page-next">
-                                    Berikutnya
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </button>
-                            </div>
-                            -->
+                            <span class="table-info"></span>
+                            <div class="pagination"></div>
                         </div>
 
                     </div>
@@ -508,6 +494,168 @@ $total_tampil = $qRewards ? mysqli_num_rows($qRewards) : 0;
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemsPerPage = 10;
+        let currentPage = 1;
+
+        const tableBody = document.querySelector('.kr-table tbody');
+        const allRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
+        
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const tableInfo = document.querySelector('.table-info');
+        const paginationDiv = document.querySelector('.table-footer .pagination');
+
+        // Create empty row
+        const emptyRow = document.createElement('tr');
+        emptyRow.id = 'searchEmptyRow';
+        emptyRow.style.display = 'none';
+        emptyRow.innerHTML = '<td colspan="6" style="text-align: center; padding: 20px;">Tidak ada hadiah yang cocok dengan pencarian.</td>';
+        tableBody.appendChild(emptyRow);
+
+        function updateTable() {
+            const query = searchInput.value.toLowerCase().trim();
+            const category = categoryFilter.value.toLowerCase();
+
+            // Filter rows
+            const filteredRows = allRows.filter(row => {
+                const rowNama = row.getAttribute('data-nama') || '';
+                const rowDeskripsi = row.getAttribute('data-deskripsi') || '';
+                const rowKategori = row.getAttribute('data-kategori') || '';
+
+                const matchesSearch = rowNama.includes(query) || rowDeskripsi.includes(query);
+                const matchesCategory = (category === 'semua kategori' || rowKategori === category);
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Re-number the NO column dynamically
+            filteredRows.forEach((row, idx) => {
+                const noCell = row.querySelector('.td-no');
+                if (noCell) {
+                    noCell.textContent = idx + 1;
+                }
+            });
+
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            // Adjust currentPage
+            if (currentPage > totalPages) currentPage = totalPages || 1;
+            if (currentPage < 1) currentPage = 1;
+
+            // Hide all rows
+            allRows.forEach(row => row.style.display = 'none');
+            emptyRow.style.display = 'none';
+
+            if (totalItems === 0) {
+                emptyRow.style.display = '';
+                tableInfo.innerHTML = 'Menampilkan <strong>0</strong> dari <strong>0</strong> hadiah';
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+            // Show page items
+            for (let i = startIndex; i < endIndex; i++) {
+                filteredRows[i].style.display = '';
+            }
+
+            // Update Info text
+            tableInfo.innerHTML = `Menampilkan <strong>${startIndex + 1}–${endIndex}</strong> dari total <strong>${totalItems}</strong> hadiah`;
+
+            // Render Pagination
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            if (totalPages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous
+            if (currentPage > 1) {
+                html += `<button class="page-btn page-prev" data-page="${currentPage - 1}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>`;
+            } else {
+                html += `<button class="page-btn page-prev" disabled>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>`;
+            }
+
+            // Page window logic
+            let pagesToShow = [];
+            if (totalPages <= 7) {
+                for (let p = 1; p <= totalPages; p++) {
+                    pagesToShow.push(p);
+                }
+            } else {
+                if (currentPage <= 4) {
+                    pagesToShow = [1, 2, 3, 4, 5, '...', totalPages];
+                } else if (currentPage >= totalPages - 3) {
+                    pagesToShow = [1, '...'];
+                    for (let p = totalPages - 4; p <= totalPages; p++) {
+                        pagesToShow.push(p);
+                    }
+                } else {
+                    pagesToShow = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                }
+            }
+
+            pagesToShow.forEach(p => {
+                if (p === '...') {
+                    html += `<span class="page-ellipsis">...</span>`;
+                } else {
+                    html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+                }
+            });
+
+            // Next
+            if (currentPage < totalPages) {
+                html += `<button class="page-btn page-next" data-page="${currentPage + 1}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>`;
+            } else {
+                html += `<button class="page-btn page-next" disabled>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>`;
+            }
+
+            paginationDiv.innerHTML = html;
+
+            paginationDiv.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentPage = parseInt(this.getAttribute('data-page'));
+                    updateTable();
+                });
+            });
+        }
+
+        const headerSearch = document.querySelector('.top-header .search-input');
+        if (headerSearch) {
+            headerSearch.addEventListener('input', function() {
+                searchInput.value = this.value;
+                currentPage = 1;
+                updateTable();
+            });
+            searchInput.addEventListener('input', function() {
+                headerSearch.value = this.value;
+            });
+        }
+
+        searchInput.addEventListener('input', () => { currentPage = 1; updateTable(); });
+        categoryFilter.addEventListener('change', () => { currentPage = 1; updateTable(); });
+
+        // Initial load
+        updateTable();
+    });
 </script>
 
 </body>

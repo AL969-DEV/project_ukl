@@ -284,3 +284,37 @@
 }
 
 .ks-table .btn-delete:hover { background-color: #FEE2E2; }
+
+/* ── Table Footer & Pagination Custom Overrides ─────────────────── */
+.ks-table-panel .table-footer {
+    padding: 16px 20px;
+    margin-top: 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination .page-btn:disabled,
+.pagination .page-btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background-color: var(--white) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+.pagination .page-btn.page-prev,
+.pagination .page-btn.page-next {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    user-select: none;
+}
+

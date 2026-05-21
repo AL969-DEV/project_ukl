@@ -52,7 +52,16 @@ if (isset($_POST['login'])) {
                 exit();
 
             } else { // Jika role === 'user'
-                $_SESSION['nama_lengkap'] = "Calon Nasabah";
+                $id_acc = $row['id_account'];
+                $query_profile = "SELECT nama_lengkap FROM nasabah WHERE id_account = '$id_acc'";
+                $result_profile = mysqli_query($conn, $query_profile);
+                
+                if ($profile = mysqli_fetch_assoc($result_profile)) {
+                    $_SESSION['nama_lengkap'] = $profile['nama_lengkap'];
+                } else {
+                    $_SESSION['nama_lengkap'] = "Calon Nasabah";
+                }
+                
                 header("Location: users/dashboard.php");
                 exit();
             }

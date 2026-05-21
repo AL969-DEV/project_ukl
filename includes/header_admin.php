@@ -13,10 +13,6 @@ if (count($kata) > 1) {
         </span>
     </div>
     <div class="header-center">
-        <div class="search-box">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-            <input type="text" class="search-input" placeholder="Cari nasabah, transaksi...">
-        </div>
     </div>
     <div class="header-right">
         <div class="user-profile">

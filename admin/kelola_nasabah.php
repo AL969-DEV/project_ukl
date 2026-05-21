@@ -220,18 +220,8 @@ $total_nasabah = mysqli_num_rows($result);
 
                 <!-- TABLE FOOTER / PAGINATION -->
                 <div class="table-footer">
-                    <span class="table-info">Menampilkan <strong><?php echo $total_nasabah; ?></strong> nasabah</span>
-                    <div class="pagination" style="display: none;">
-                        <button class="page-btn page-prev" disabled>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Previous
-                        </button>
-                        <button class="page-btn active">1</button>
-                        <button class="page-btn page-next">
-                            Berikutnya
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                    </div>
+                    <span class="table-info"></span>
+                    <div class="pagination"></div>
                 </div>
 
             </div><!-- end table-panel -->
@@ -241,41 +231,175 @@ $total_nasabah = mysqli_num_rows($result);
 </div><!-- end app-wrapper -->
 
 <script>
-function searchTable() {
-    let input = document.getElementById("searchInput");
-    let filter = input.value.toLowerCase();
-    let table = document.querySelector(".nasabah-table tbody");
-    let tr = table.getElementsByTagName("tr");
-    let emptyRow = document.getElementById("searchEmptyRow");
-    let visibleCount = 0;
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsPerPage = 10;
+    let currentPage = 1;
 
-    for (let i = 0; i < tr.length; i++) {
-        // Skip empty message rows
-        if (tr[i].id === "searchEmptyRow" || tr[i].querySelector("td[colspan]")) {
-            continue;
+    const tableBody = document.querySelector('.nasabah-table tbody');
+    const allRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]') && row.id !== 'searchEmptyRow');
+    
+    const searchInput = document.getElementById('searchInput');
+    const tableInfo = document.querySelector('.table-info');
+    const paginationDiv = document.querySelector('.table-footer .pagination');
+
+    // Create empty row if not exists
+    let emptyRow = document.getElementById('searchEmptyRow');
+    if (!emptyRow) {
+        emptyRow = document.createElement('tr');
+        emptyRow.id = 'searchEmptyRow';
+        emptyRow.style.display = 'none';
+        emptyRow.innerHTML = '<td colspan="8" style="text-align: center; padding: 20px;">Tidak ada nasabah yang cocok dengan pencarian.</td>';
+        tableBody.appendChild(emptyRow);
+    }
+
+    function updateTable() {
+        const query = searchInput.value.toLowerCase().trim();
+
+        // Filter rows
+        const filteredRows = allRows.filter(row => {
+            const nameEl = row.querySelector('.nasabah-name');
+            const idEl = row.querySelector('.nasabah-id');
+            const emailEl = row.querySelector('.kontak-email');
+            const phoneEl = row.querySelector('.kontak-phone');
+
+            const nameText = nameEl ? nameEl.textContent.toLowerCase() : '';
+            const idText = idEl ? idEl.textContent.toLowerCase() : '';
+            const emailText = emailEl ? emailEl.textContent.toLowerCase() : '';
+            const phoneText = phoneEl ? phoneEl.textContent.toLowerCase() : '';
+
+            return nameText.includes(query) || idText.includes(query) || emailText.includes(query) || phoneText.includes(query);
+        });
+
+        const totalItems = filteredRows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Adjust currentPage if out of bounds
+        if (currentPage > totalPages) {
+            currentPage = totalPages || 1;
         }
-        
-        let nameSpan = tr[i].querySelector(".nasabah-name");
-        if (nameSpan) {
-            let nameValue = nameSpan.textContent || nameSpan.innerText;
-            if (nameValue.toLowerCase().indexOf(filter) > -1) {
-                tr[i].style.display = "";
-                visibleCount++;
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        // Hide all rows
+        allRows.forEach(row => row.style.display = 'none');
+        emptyRow.style.display = 'none';
+
+        if (totalItems === 0) {
+            emptyRow.style.display = '';
+            tableInfo.innerHTML = 'Menampilkan <strong>0</strong> - <strong>0</strong> dari <strong>0</strong> nasabah';
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+        // Show page items
+        for (let i = startIndex; i < endIndex; i++) {
+            filteredRows[i].style.display = '';
+        }
+
+        // Update Info
+        tableInfo.innerHTML = `Menampilkan <strong>${startIndex + 1}</strong> - <strong>${endIndex}</strong> dari <strong>${totalItems}</strong> nasabah`;
+
+        // Render Pagination Buttons
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        if (totalPages <= 1) {
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Previous Button
+        if (currentPage > 1) {
+            html += `<button class="page-btn page-prev" data-page="${currentPage - 1}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Sebelumnya
+            </button>`;
+        } else {
+            html += `<button class="page-btn page-prev" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Sebelumnya
+            </button>`;
+        }
+
+        // Page window logic
+        let pagesToShow = [];
+        if (totalPages <= 7) {
+            for (let p = 1; p <= totalPages; p++) {
+                pagesToShow.push(p);
+            }
+        } else {
+            if (currentPage <= 4) {
+                pagesToShow = [1, 2, 3, 4, 5, '...', totalPages];
+            } else if (currentPage >= totalPages - 3) {
+                pagesToShow = [1, '...'];
+                for (let p = totalPages - 4; p <= totalPages; p++) {
+                    pagesToShow.push(p);
+                }
             } else {
-                tr[i].style.display = "none";
+                pagesToShow = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
             }
         }
-    }
-    
-    // Show 'no results' row if nothing found
-    if (emptyRow) {
-        if (visibleCount === 0 && filter !== "" && table.querySelectorAll("tr").length > 2) {
-            emptyRow.style.display = "";
+
+        // Render numbers
+        pagesToShow.forEach(p => {
+            if (p === '...') {
+                html += `<span class="page-ellipsis">...</span>`;
+            } else {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+            }
+        });
+
+        // Next Button
+        if (currentPage < totalPages) {
+            html += `<button class="page-btn page-next" data-page="${currentPage + 1}">
+                Berikutnya
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
         } else {
-            emptyRow.style.display = "none";
+            html += `<button class="page-btn page-next" disabled>
+                Berikutnya
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
         }
+
+        paginationDiv.innerHTML = html;
+
+        // Add event listeners to page buttons
+        paginationDiv.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentPage = parseInt(this.getAttribute('data-page'));
+                updateTable();
+            });
+        });
     }
-}
+
+    const headerSearch = document.querySelector('.top-header .search-input');
+    if (headerSearch) {
+        headerSearch.addEventListener('input', function() {
+            searchInput.value = this.value;
+            currentPage = 1;
+            updateTable();
+        });
+        searchInput.addEventListener('input', function() {
+            headerSearch.value = this.value;
+        });
+    }
+
+    searchInput.addEventListener('input', function() {
+        currentPage = 1;
+        updateTable();
+    });
+
+    // Initial load
+    updateTable();
+});
 </script>
 
 </body>

@@ -21,6 +21,7 @@ if (!isset($_SESSION['id_account']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+// Global Stats
 $total_kategori = 0;
 $poin_tertinggi = 0;
 $q_stats = mysqli_query($conn, "SELECT COUNT(*) as total, MAX(poin_per_kg) as max_poin FROM kategori_sampah");
@@ -29,6 +30,7 @@ if ($row_stats = mysqli_fetch_assoc($q_stats)) {
     $poin_tertinggi = $row_stats['max_poin'] ?? 0;
 }
 
+// Get all category list
 $query = "SELECT * FROM kategori_sampah ORDER BY id_kategori DESC";
 $result = mysqli_query($conn, $query);
 $total_data = mysqli_num_rows($result);
@@ -131,30 +133,10 @@ $total_data = mysqli_num_rows($result);
             <!-- ── Table Panel ── -->
             <div class="ks-table-panel">
 
-                <!-- Toolbar -->
                 <div class="ks-toolbar">
-                    <div class="ks-search-wrap">
+                    <div class="ks-search-wrap" style="width: 100%; max-width: 300px;">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                        <input type="text" class="search-input" placeholder="Cari Nama Kategori...">
-                    </div>
-
-                    <div class="ks-filter-wrap">
-                        <select class="ks-filter-select">
-                            <option>Semua Status</option>
-                            <option>Aktif</option>
-                            <option>Non-Aktif</option>
-                        </select>
-                        <svg class="ks-select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-
-                    <div class="ks-filter-wrap">
-                        <select class="ks-filter-select">
-                            <option>Urutkan: Poin Tertinggi</option>
-                            <option>Urutkan: Poin Terendah</option>
-                            <option>Urutkan: Nama A-Z</option>
-                            <option>Urutkan: Terbaru</option>
-                        </select>
-                        <svg class="ks-select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Cari Nama Kategori..." autocomplete="off">
                     </div>
                 </div>
 
@@ -230,18 +212,9 @@ $total_data = mysqli_num_rows($result);
                     </table>
                 </div>
 
-                <!-- Table Footer -->
                 <div class="table-footer">
-                    <span class="table-info">
-                        Menampilkan <strong><?php echo $total_data; ?></strong> dari <strong><?php echo $total_data; ?></strong> kategori
-                    </span>
-                    <div class="pagination">
-                        <button class="page-btn active">1</button>
-                        <button class="page-btn">2</button>
-                        <button class="page-btn page-next">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                    </div>
+                    <span class="table-info"></span>
+                    <div class="pagination"></div>
                 </div>
 
             </div><!-- end ks-table-panel -->
@@ -250,7 +223,167 @@ $total_data = mysqli_num_rows($result);
     </div><!-- end main-content -->
 </div><!-- end app-wrapper -->
 
-<?php include 'includes/footer.php'; ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    
+    const tableBody = document.querySelector('.ks-table tbody');
+    const allRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => !row.classList.contains('empty-row') && row.id !== 'searchEmptyRow' && !row.querySelector('td[colspan]'));
+    const searchInput = document.getElementById('searchInput');
+    const tableInfo = document.querySelector('.table-info');
+    const paginationDiv = document.querySelector('.table-footer .pagination');
+    
+    // Create empty row
+    const emptyRow = document.createElement('tr');
+    emptyRow.id = 'searchEmptyRow';
+    emptyRow.style.display = 'none';
+    emptyRow.innerHTML = '<td colspan="7" style="text-align: center; padding: 24px;">Tidak ada kategori sampah yang cocok dengan pencarian.</td>';
+    tableBody.appendChild(emptyRow);
+
+    function updateTable() {
+        const query = searchInput.value.toLowerCase().trim();
+        
+        // Filter rows
+        const filteredRows = allRows.filter(row => {
+            const nameEl = row.querySelector('.ks-nama');
+            const codeEl = row.querySelector('.ks-kode');
+            const descEl = row.querySelector('.ks-td-desc');
+            
+            const nameText = nameEl ? nameEl.textContent.toLowerCase() : '';
+            const codeText = codeEl ? codeEl.textContent.toLowerCase() : '';
+            const descText = descEl ? descEl.textContent.toLowerCase() : '';
+            
+            return nameText.includes(query) || codeText.includes(query) || descText.includes(query);
+        });
+
+        const totalItems = filteredRows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Adjust currentPage if out of bounds
+        if (currentPage > totalPages) {
+            currentPage = totalPages || 1;
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        // Hide all rows
+        allRows.forEach(row => row.style.display = 'none');
+        emptyRow.style.display = 'none';
+
+        if (totalItems === 0) {
+            emptyRow.style.display = '';
+            tableInfo.innerHTML = 'Menampilkan <strong>0</strong> - <strong>0</strong> dari <strong>0</strong> kategori';
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+        // Show page items
+        for (let i = startIndex; i < endIndex; i++) {
+            filteredRows[i].style.display = '';
+        }
+
+        // Update Info
+        tableInfo.innerHTML = `Menampilkan <strong>${startIndex + 1}</strong> - <strong>${endIndex}</strong> dari <strong>${totalItems}</strong> kategori`;
+
+        // Render Pagination Buttons
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        if (totalPages <= 1) {
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Previous Button
+        if (currentPage > 1) {
+            html += `<button class="page-btn page-prev" data-page="${currentPage - 1}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
+        } else {
+            html += `<button class="page-btn page-prev" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
+        }
+
+        // Page window logic
+        let pagesToShow = [];
+        if (totalPages <= 7) {
+            for (let p = 1; p <= totalPages; p++) {
+                pagesToShow.push(p);
+            }
+        } else {
+            if (currentPage <= 4) {
+                pagesToShow = [1, 2, 3, 4, 5, '...', totalPages];
+            } else if (currentPage >= totalPages - 3) {
+                pagesToShow = [1, '...'];
+                for (let p = totalPages - 4; p <= totalPages; p++) {
+                    pagesToShow.push(p);
+                }
+            } else {
+                pagesToShow = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+            }
+        }
+
+        // Render numbers
+        pagesToShow.forEach(p => {
+            if (p === '...') {
+                html += `<span class="page-ellipsis">...</span>`;
+            } else {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+            }
+        });
+
+        // Next Button
+        if (currentPage < totalPages) {
+            html += `<button class="page-btn page-next" data-page="${currentPage + 1}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
+        } else {
+            html += `<button class="page-btn page-next" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
+        }
+
+        paginationDiv.innerHTML = html;
+
+        // Add event listeners to page buttons
+        paginationDiv.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentPage = parseInt(this.getAttribute('data-page'));
+                updateTable();
+            });
+        });
+    }
+
+    const headerSearch = document.querySelector('.top-header .search-input');
+    if (headerSearch) {
+        headerSearch.addEventListener('input', function() {
+            searchInput.value = this.value;
+            currentPage = 1;
+            updateTable();
+        });
+        searchInput.addEventListener('input', function() {
+            headerSearch.value = this.value;
+        });
+    }
+
+    searchInput.addEventListener('input', function() {
+        currentPage = 1;
+        updateTable();
+    });
+
+    // Initial load
+    updateTable();
+});
+</script>
 
 </body>
 </html>

@@ -46,20 +46,19 @@ while($row = mysqli_fetch_assoc($result_status_count)) {
     }
 }
 
-// Pagination logic
-$limit = 10;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-if ($page < 1) $page = 1;
-$total_pages = ceil($total_transaksi / $limit);
-if ($page > $total_pages && $total_pages > 0) $page = $total_pages;
-$offset = ($page - 1) * $limit;
+// Get categories list for filter dropdown
+$q_cats = mysqli_query($conn, "SELECT nama_sampah FROM kategori_sampah ORDER BY nama_sampah ASC");
+$categories = [];
+while ($row_cat = mysqli_fetch_assoc($q_cats)) {
+    $categories[] = $row_cat['nama_sampah'];
+}
 
-// Transaction data query
+// Transaction data query (all transactions for client-side filtering)
 $query_trx = "SELECT ts.*, n.nama_lengkap, n.id_nasabah, ks.nama_sampah, ks.poin_per_kg 
               FROM transaksi_setor ts
               LEFT JOIN nasabah n ON ts.id_profile = n.id_nasabah
               LEFT JOIN kategori_sampah ks ON ts.id_kategori = ks.id_kategori
-              ORDER BY ts.tgl_setor DESC LIMIT $limit OFFSET $offset";
+              ORDER BY ts.tgl_setor DESC";
 $result = mysqli_query($conn, $query_trx);
 ?>
 
@@ -164,25 +163,23 @@ $result = mysqli_query($conn, $query_trx);
                 <div class="ts-toolbar">
                     <div class="ts-search-wrap">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                        <input type="text" class="search-input" placeholder="Cari nama nasabah, ID transaksi...">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Cari nama nasabah, ID transaksi..." autocomplete="off">
                     </div>
 
                     <!-- Filter: Kategori -->
                     <div class="ts-filter-wrap">
-                        <select class="ts-filter-select">
+                        <select class="ts-filter-select" id="categoryFilter">
                             <option>Semua Kategori</option>
-                            <option>Plastik PET</option>
-                            <option>Kertas/Kardus</option>
-                            <option>Logam/Besi</option>
-                            <option>Kaca/Botol</option>
-                            <option>Elektronik</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option><?php echo htmlspecialchars($cat); ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <svg class="ts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
 
                     <!-- Filter: Status -->
                     <div class="ts-filter-wrap">
-                        <select class="ts-filter-select">
+                        <select class="ts-filter-select" id="statusFilter">
                             <option>Semua Status</option>
                             <option>Selesai</option>
                             <option>Diproses</option>
@@ -194,12 +191,12 @@ $result = mysqli_query($conn, $query_trx);
 
                     <!-- Date range -->
                     <div class="ts-date-input">
-                        <input type="date" class="ts-date-field" value="2026-04-18">
+                        <input type="date" class="ts-date-field" id="startDate" placeholder="Mulai Tanggal">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.8"/><path d="M3 10h18M8 2v4M16 2v4" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round"/></svg>
                     </div>
 
                     <div class="ts-date-input">
-                        <input type="date" class="ts-date-field" value="2026-04-18">
+                        <input type="date" class="ts-date-field" id="endDate" placeholder="Sampai Tanggal">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.8"/><path d="M3 10h18M8 2v4M16 2v4" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round"/></svg>
                     </div>
                 </div>
@@ -207,7 +204,7 @@ $result = mysqli_query($conn, $query_trx);
                 <!-- Toolbar Row 2 -->
                 <div class="ts-toolbar-row2">
                     <div class="ts-filter-wrap">
-                        <select class="ts-filter-select">
+                        <select class="ts-filter-select" id="sortBy">
                             <option>Terbaru Pertama</option>
                             <option>Terlama Pertama</option>
                             <option>Poin Terbanyak</option>
@@ -215,7 +212,7 @@ $result = mysqli_query($conn, $query_trx);
                         </select>
                         <svg class="ts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
-                    <button class="ts-btn-reset">
+                    <button class="ts-btn-reset" id="resetBtn">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         Reset Filter
                     </button>
@@ -239,119 +236,71 @@ $result = mysqli_query($conn, $query_trx);
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- ================================================
-                                 PHP LOOP START:
-                                 <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                                 Ganti nilai dummy dengan echo $row['kolom']
-                                 ================================================ -->
+                            <?php if(mysqli_num_rows($result) > 0): ?>
+                                <?php while ($row = mysqli_fetch_assoc($result)): 
+                                    $poin = $row['poin'] > 0 ? $row['poin'] : ($row['berat'] * ($row['poin_per_kg'] ?? 0));
+                                    
+                                    $nama_parts = explode(' ', trim($row['nama_lengkap'] ?? 'Nasabah'));
+                                    $initials = strtoupper(substr($nama_parts[0], 0, 1));
+                                    if (count($nama_parts) > 1) {
+                                        $initials .= strtoupper(substr($nama_parts[1], 0, 1));
+                                    }
+                                    
+                                    $status_class = strtolower($row['status']) == 'claimed' ? 'selesai' : 'pending';
+                                    $status_text = strtolower($row['status']) == 'claimed' ? 'Selesai' : 'Pending';
+                                    
+                                    $kategori_class = strtolower(explode(' ', $row['nama_sampah'] ?? '')[0]);
+                                    if (!in_array($kategori_class, ['plastik', 'kertas', 'logam', 'kaca'])) {
+                                        $kategori_class = 'plastik';
+                                    }
 
-                                <?php if(mysqli_num_rows($result) > 0): ?>
-                                    <?php while ($row = mysqli_fetch_assoc($result)): 
-                                        $poin = $row['poin'] > 0 ? $row['poin'] : ($row['berat'] * ($row['poin_per_kg'] ?? 0));
-                                        
-                                        $nama_parts = explode(' ', trim($row['nama_lengkap'] ?? 'Nasabah'));
-                                        $initials = strtoupper(substr($nama_parts[0], 0, 1));
-                                        if (count($nama_parts) > 1) {
-                                            $initials .= strtoupper(substr($nama_parts[1], 0, 1));
-                                        }
-                                        
-                                        $status_class = strtolower($row['status']) == 'claimed' ? 'selesai' : 'pending';
-                                        $status_text = strtolower($row['status']) == 'claimed' ? 'Selesai' : 'Pending';
-                                        
-                                        $kategori_class = strtolower(explode(' ', $row['nama_sampah'] ?? '')[0]);
-                                        if (!in_array($kategori_class, ['plastik', 'kertas', 'logam', 'kaca'])) {
-                                            $kategori_class = 'plastik';
-                                        }
-
-                                        $tgl = strtotime($row['tgl_setor']);
-                                        $tgl_date = date('j M Y', $tgl);
-                                        $tgl_time = date('H:i', $tgl);
-                                    ?>
-                                    <tr>
-                                        <td class="ts-td-cb"><input type="checkbox" class="ts-cb"></td>
-                                        <td class="ts-td-id">#TRX-<?php echo str_pad($row['id_setor'], 4, '0', STR_PAD_LEFT); ?></td>
-                                        <td class="ts-td-tgl">
-                                            <p class="ts-tgl-date"><?php echo $tgl_date; ?></p>
-                                            <p class="ts-tgl-time"><?php echo $tgl_time; ?></p>
-                                        </td>
-                                        <td>
-                                            <div class="nasabah-cell">
-                                                <div class="nasabah-avatar" style="background:#DCFCE7;color:#16A34A;"><?php echo $initials; ?></div>
-                                                <div class="nasabah-info">
-                                                    <span class="nasabah-name"><?php echo htmlspecialchars($row['nama_lengkap'] ?? 'Nasabah'); ?></span>
-                                                    <span class="nasabah-id">NSB-<?php echo str_pad($row['id_nasabah'] ?? 0, 4, '0', STR_PAD_LEFT); ?></span>
-                                                </div>
+                                    $tgl = strtotime($row['tgl_setor']);
+                                    $tgl_date = date('j M Y', $tgl);
+                                    $tgl_time = date('H:i', $tgl);
+                                ?>
+                                <tr data-id="#TRX-<?php echo str_pad($row['id_setor'], 4, '0', STR_PAD_LEFT); ?>"
+                                    data-date="<?php echo date('Y-m-d H:i:s', $tgl); ?>"
+                                    data-nasabah="<?php echo htmlspecialchars($row['nama_lengkap'] ?? ''); ?>"
+                                    data-kategori="<?php echo htmlspecialchars($row['nama_sampah'] ?? ''); ?>"
+                                    data-berat="<?php echo $row['berat']; ?>"
+                                    data-poin="<?php echo $poin; ?>"
+                                    data-status="<?php echo $status_text; ?>">
+                                    <td class="ts-td-cb"><input type="checkbox" class="ts-cb"></td>
+                                    <td class="ts-td-id">#TRX-<?php echo str_pad($row['id_setor'], 4, '0', STR_PAD_LEFT); ?></td>
+                                    <td class="ts-td-tgl">
+                                        <p class="ts-tgl-date"><?php echo $tgl_date; ?></p>
+                                        <p class="ts-tgl-time"><?php echo $tgl_time; ?></p>
+                                    </td>
+                                    <td>
+                                        <div class="nasabah-cell">
+                                            <div class="nasabah-avatar" style="background:#DCFCE7;color:#16A34A;"><?php echo $initials; ?></div>
+                                            <div class="nasabah-info">
+                                                <span class="nasabah-name"><?php echo htmlspecialchars($row['nama_lengkap'] ?? 'Nasabah'); ?></span>
+                                                <span class="nasabah-id">NSB-<?php echo str_pad($row['id_nasabah'] ?? 0, 4, '0', STR_PAD_LEFT); ?></span>
                                             </div>
-                                        </td>
-                                        <td><span class="ts-kat-badge <?php echo $kategori_class; ?>">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-                                            <?php echo htmlspecialchars($row['nama_sampah'] ?? 'Lainnya'); ?>
-                                        </span></td>
-                                        <td class="ts-td-berat"><?php echo number_format($row['berat'], 2, ',', '.'); ?> <span class="ts-unit-small">kg</span></td>
-                                        <td class="ts-td-poin">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                                            <?php echo number_format($poin, 0, ',', '.'); ?>
-                                        </td>
-                                        <td><span class="status-badge <?php echo $status_class; ?>">● <?php echo $status_text; ?></span></td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="8" style="text-align: center; padding: 20px;">Belum ada transaksi.</td>
-                                    </tr>
-                                <?php endif; ?>
-
+                                        </div>
+                                    </td>
+                                    <td><span class="ts-kat-badge <?php echo $kategori_class; ?>">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                                        <?php echo htmlspecialchars($row['nama_sampah'] ?? 'Lainnya'); ?>
+                                    </span></td>
+                                    <td class="ts-td-berat"><?php echo number_format($row['berat'], 2, ',', '.'); ?> <span class="ts-unit-small">kg</span></td>
+                                    <td class="ts-td-poin">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                        <?php echo number_format($poin, 0, ',', '.'); ?>
+                                    </td>
+                                    <td><span class="status-badge <?php echo $status_class; ?>">● <?php echo $status_text; ?></span></td>
+                                </tr>
                                 <?php endwhile; ?>
-
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Table Footer -->
                 <div class="table-footer" style="margin: 0; padding: 16px 20px; border-top: 1px solid var(--border-color);">
-                    <span class="table-info">
-                        Menampilkan transaksi <strong><?php echo ($total_transaksi > 0) ? $offset + 1 : 0; ?>–<?php echo min($offset + $limit, $total_transaksi); ?></strong> dari total <strong><?php echo number_format($total_transaksi, 0, ',', '.'); ?></strong>
-                    </span>
-
-                    <?php if ($total_pages > 1): ?>
-                    <div class="pagination">
-                        <?php if ($page > 1): ?>
-                            <a href="?page=<?php echo $page - 1; ?>" class="page-btn" style="text-decoration:none; width:auto; padding:0 12px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="transform: rotate(180deg); margin-right: 4px; vertical-align: middle;"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                Sebelumnya
-                            </a>
-                        <?php endif; ?>
-
-                        <?php 
-                        $start_page = max(1, $page - 2);
-                        $end_page = min($total_pages, $page + 2);
-                        
-                        if ($start_page > 1): ?>
-                            <a href="?page=1" class="page-btn" style="text-decoration:none;">1</a>
-                            <?php if ($start_page > 2): ?>
-                                <span class="page-ellipsis">...</span>
-                            <?php endif; ?>
-                        <?php endif; ?>
-
-                        <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                            <a href="?page=<?php echo $i; ?>" class="page-btn <?php echo ($i == $page) ? 'active' : ''; ?>" style="text-decoration:none;"><?php echo $i; ?></a>
-                        <?php endfor; ?>
-
-                        <?php if ($end_page < $total_pages): ?>
-                            <?php if ($end_page < $total_pages - 1): ?>
-                                <span class="page-ellipsis">...</span>
-                            <?php endif; ?>
-                            <a href="?page=<?php echo $total_pages; ?>" class="page-btn" style="text-decoration:none;"><?php echo $total_pages; ?></a>
-                        <?php endif; ?>
-
-                        <?php if ($page < $total_pages): ?>
-                            <a href="?page=<?php echo $page + 1; ?>" class="page-btn page-next" style="text-decoration:none; width:auto; padding:0 12px;">
-                                Berikutnya
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-left: 4px; vertical-align: middle;"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                    <?php endif; ?>
+                    <span class="table-info"></span>
+                    <div class="pagination"></div>
                 </div>
 
             </div><!-- end ts-table-panel -->
@@ -359,6 +308,234 @@ $result = mysqli_query($conn, $query_trx);
         </div><!-- end page-content -->
     </div><!-- end main-content -->
 </div><!-- end app-wrapper -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsPerPage = 10;
+    let currentPage = 1;
+
+    const tableBody = document.querySelector('.ts-table tbody');
+    const allRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
+    
+    // Elements
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const sortBySelect = document.getElementById('sortBy');
+    const resetBtn = document.getElementById('resetBtn');
+    const tableInfo = document.querySelector('.table-info');
+    const paginationDiv = document.querySelector('.table-footer .pagination');
+
+    // Clear initial date values
+    startDateInput.value = '';
+    endDateInput.value = '';
+
+    // Create empty row
+    const emptyRow = document.createElement('tr');
+    emptyRow.id = 'searchEmptyRow';
+    emptyRow.style.display = 'none';
+    emptyRow.innerHTML = '<td colspan="8" style="text-align: center; padding: 20px;">Tidak ada transaksi yang cocok dengan filter.</td>';
+    tableBody.appendChild(emptyRow);
+
+    function updateTable() {
+        const query = searchInput.value.toLowerCase().trim();
+        const category = categoryFilter.value;
+        const status = statusFilter.value.toLowerCase();
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        const sortBy = sortBySelect.value;
+
+        // 1. Filter
+        let filteredRows = allRows.filter(row => {
+            // Search filter
+            const trxId = row.getAttribute('data-id').toLowerCase();
+            const nasabahName = row.getAttribute('data-nasabah').toLowerCase();
+            const matchesSearch = trxId.includes(query) || nasabahName.includes(query);
+
+            // Kategori filter
+            const rowKategori = row.getAttribute('data-kategori');
+            const matchesKategori = (category === 'Semua Kategori' || rowKategori === category);
+
+            // Status filter
+            const rowStatus = row.getAttribute('data-status').toLowerCase();
+            let matchesStatus = true;
+            if (status !== 'semua status') {
+                matchesStatus = (rowStatus === status);
+            }
+
+            // Date filter
+            const rowDateStr = row.getAttribute('data-date').split(' ')[0]; // YYYY-MM-DD
+            let matchesDate = true;
+            if (startDate) {
+                matchesDate = matchesDate && (rowDateStr >= startDate);
+            }
+            if (endDate) {
+                matchesDate = matchesDate && (rowDateStr <= endDate);
+            }
+
+            return matchesSearch && matchesKategori && matchesStatus && matchesDate;
+        });
+
+        // 2. Sort
+        filteredRows.sort((a, b) => {
+            if (sortBy === 'Terbaru Pertama') {
+                return new Date(b.getAttribute('data-date')) - new Date(a.getAttribute('data-date'));
+            } else if (sortBy === 'Terlama Pertama') {
+                return new Date(a.getAttribute('data-date')) - new Date(b.getAttribute('data-date'));
+            } else if (sortBy === 'Poin Terbanyak') {
+                return parseInt(b.getAttribute('data-poin')) - parseInt(a.getAttribute('data-poin'));
+            } else if (sortBy === 'Berat Terbesar') {
+                return parseFloat(b.getAttribute('data-berat')) - parseFloat(a.getAttribute('data-berat'));
+            }
+            return 0;
+        });
+
+        // Re-append sorted rows to the DOM
+        filteredRows.forEach(row => tableBody.appendChild(row));
+        tableBody.appendChild(emptyRow); // keep empty row at the bottom
+
+        const totalItems = filteredRows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Adjust page
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+        if (currentPage < 1) currentPage = 1;
+
+        // Hide all
+        allRows.forEach(row => row.style.display = 'none');
+        emptyRow.style.display = 'none';
+
+        if (totalItems === 0) {
+            emptyRow.style.display = '';
+            tableInfo.innerHTML = 'Menampilkan <strong>0</strong> - <strong>0</strong> dari <strong>0</strong> transaksi';
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+        // Show page items
+        for (let i = startIndex; i < endIndex; i++) {
+            filteredRows[i].style.display = '';
+        }
+
+        // Info text
+        tableInfo.innerHTML = `Menampilkan transaksi <strong>${startIndex + 1}–${endIndex}</strong> dari total <strong>${totalItems}</strong>`;
+
+        // Pagination buttons
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        if (totalPages <= 1) {
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Previous
+        if (currentPage > 1) {
+            html += `<button class="page-btn" data-page="${currentPage - 1}" style="width:auto; padding:0 12px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="transform: rotate(180deg); margin-right: 4px; vertical-align: middle;"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Sebelumnya
+            </button>`;
+        } else {
+            html += `<button class="page-btn" disabled style="width:auto; padding:0 12px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="transform: rotate(180deg); margin-right: 4px; vertical-align: middle;"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Sebelumnya
+            </button>`;
+        }
+
+        // Page window logic
+        let pagesToShow = [];
+        if (totalPages <= 7) {
+            for (let p = 1; p <= totalPages; p++) {
+                pagesToShow.push(p);
+            }
+        } else {
+            if (currentPage <= 4) {
+                pagesToShow = [1, 2, 3, 4, 5, '...', totalPages];
+            } else if (currentPage >= totalPages - 3) {
+                pagesToShow = [1, '...'];
+                for (let p = totalPages - 4; p <= totalPages; p++) {
+                    pagesToShow.push(p);
+                }
+            } else {
+                pagesToShow = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+            }
+        }
+
+        pagesToShow.forEach(p => {
+            if (p === '...') {
+                html += `<span class="page-ellipsis">...</span>`;
+            } else {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+            }
+        });
+
+        // Next
+        if (currentPage < totalPages) {
+            html += `<button class="page-btn page-next" data-page="${currentPage + 1}" style="width:auto; padding:0 12px;">
+                Berikutnya
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-left: 4px; vertical-align: middle;"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
+        } else {
+            html += `<button class="page-btn page-next" disabled style="width:auto; padding:0 12px;">
+                Berikutnya
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-left: 4px; vertical-align: middle;"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>`;
+        }
+
+        paginationDiv.innerHTML = html;
+
+        paginationDiv.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentPage = parseInt(this.getAttribute('data-page'));
+                updateTable();
+            });
+        });
+    }
+
+    // Event listeners
+    const headerSearch = document.querySelector('.top-header .search-input');
+    if (headerSearch) {
+        headerSearch.addEventListener('input', function() {
+            searchInput.value = this.value;
+            currentPage = 1;
+            updateTable();
+        });
+        searchInput.addEventListener('input', function() {
+            headerSearch.value = this.value;
+        });
+    }
+
+    searchInput.addEventListener('input', () => { currentPage = 1; updateTable(); });
+    categoryFilter.addEventListener('change', () => { currentPage = 1; updateTable(); });
+    statusFilter.addEventListener('change', () => { currentPage = 1; updateTable(); });
+    startDateInput.addEventListener('change', () => { currentPage = 1; updateTable(); });
+    endDateInput.addEventListener('change', () => { currentPage = 1; updateTable(); });
+    sortBySelect.addEventListener('change', () => { currentPage = 1; updateTable(); });
+
+    resetBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        if (headerSearch) headerSearch.value = '';
+        categoryFilter.selectedIndex = 0;
+        statusFilter.selectedIndex = 0;
+        startDateInput.value = '';
+        endDateInput.value = '';
+        sortBySelect.selectedIndex = 0;
+        currentPage = 1;
+        updateTable();
+    });
+
+    // Initial load
+    updateTable();
+});
+</script>
 
 </body>
 </html>

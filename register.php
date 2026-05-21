@@ -3,13 +3,47 @@ include 'includes/config.php';
 
 if (isset($_POST['register'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $password_raw = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
     
-    $query = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', 'user')";
-            if (mysqli_query($conn, $query)) {
-                echo "<script>alert('Akun berhasil dibuat! Silakan login untuk melanjutkan.'); window.location.href='index.php';</script>";
-            } else {
-        echo "Error: " . mysqli_error($conn);
+    // Validasi kata sandi cocok
+    if ($password_raw !== $confirm_password) {
+        echo "<script>alert('Konfirmasi kata sandi tidak cocok!'); window.history.back();</script>";
+        exit;
+    }
+    
+    $password = password_hash($password_raw, PASSWORD_DEFAULT);
+    
+    mysqli_begin_transaction($conn);
+    try {
+        // Cek apakah username sudah ada
+        $check_query = "SELECT id_account FROM accounts WHERE username = '$username'";
+        $check_result = mysqli_query($conn, $check_query);
+        if (mysqli_num_rows($check_result) > 0) {
+            echo "<script>alert('Username sudah terdaftar! Silakan gunakan username lain.'); window.history.back();</script>";
+            exit;
+        }
+
+        // Simpan ke tabel accounts
+        $query_acc = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', 'user')";
+        mysqli_query($conn, $query_acc);
+        
+        $id_account = mysqli_insert_id($conn);
+        
+        // Simpan ke tabel nasabah
+        $nama_lengkap = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
+        $no_hp = mysqli_real_escape_string($conn, $_POST['no_hp']);
+        
+        $query_nas = "INSERT INTO nasabah (id_account, nama_lengkap, no_telp, alamat, total_poin) 
+                      VALUES ('$id_account', '$nama_lengkap', '$no_hp', '', 0)";
+        mysqli_query($conn, $query_nas);
+        
+        mysqli_commit($conn);
+        
+        echo "<script>alert('Akun berhasil dibuat! Silakan login untuk melanjutkan.'); window.location.href='index.php';</script>";
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo "<script>alert('Gagal membuat akun: " . mysqli_real_escape_string($conn, $e->getMessage()) . "'); window.history.back();</script>";
     }
 }
 ?>
@@ -98,7 +132,7 @@ if (isset($_POST['register'])) {
                 <div class="min-8-karakter-parent">
                   <input
                     class="min-8-karakter"
-                    placeholder="Min. 8 karakter"
+                    placeholder="Kata sandi"
                     type="password"
                     name="password"
                   />
