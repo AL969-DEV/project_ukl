@@ -7,7 +7,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
 include '../includes/config.php';
 
-// Menghitung total nasabah nyata dari database
+// Menghitung total nasabah 
 $query_nasabah = "SELECT COUNT(*) as total FROM nasabah";
 $result_nasabah = mysqli_query($conn, $query_nasabah);
 $row_nasabah = mysqli_fetch_assoc($result_nasabah);
@@ -88,6 +88,7 @@ $bulan_indo = [
 ];
 $tanggal_sekarang = $hari_indo[$hari_inggris] . ', ' . date('d') . ' ' . $bulan_indo[(int)date('m')] . ' ' . date('Y');
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>  
@@ -105,12 +106,10 @@ $tanggal_sekarang = $hari_indo[$hari_inggris] . ', ' . date('d') . ' ' . $bulan_
 
     <?php $active_page = 'dashboard'; include '../includes/sidebar_admin.php'; ?>
 
-    <!-- ===================== MAIN CONTENT ===================== -->
     <div class="main-content">
 
         <?php include '../includes/header_admin.php'; ?>
 
-        <!-- PAGE CONTENT -->
         <div class="page-content">
 
             <!-- Page Title -->

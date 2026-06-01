@@ -153,93 +153,8 @@ $catalog_result = mysqli_query($conn, $query_catalog);
 
 <main class="main-content">
     <div class="container">
-        <div class="content-grid">
-
-            <!-- ── LEFT COLUMN ── -->
-            <div class="col-left">
-
-                <!-- Riwayat Setoran Terbaru -->
-                <div class="card riwayat-card">
-                    <div class="card-header">
-                        <h2 class="card-title">Riwayat Setoran Terbaru</h2>
-                        <a href="riwayat_user.php" class="link-arrow">
-                            Lihat semua riwayat
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </a>
-                    </div>
-
-                    <div class="table-wrap">
-                        <table class="riwayat-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>TANGGAL</th>
-                                    <th>JENIS SAMPAH</th>
-                                    <th>BERAT</th>
-                                    <th>POIN DITERIMA</th>
-                                    <th>STATUS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if(mysqli_num_rows($riwayat_result) > 0): ?>
-                                    <?php while($r = mysqli_fetch_assoc($riwayat_result)): 
-                                        $kategori_class = strtolower(explode(' ', $r['nama_sampah'] ?? 'plastik')[0]);
-                                        $is_claimed = $r['status'] === 'claimed';
-                                    ?>
-                                    <tr>
-                                        <td class="td-id">#S-<?php echo str_pad($r['id_setor'], 4, '0', STR_PAD_LEFT); ?></td>
-                                        <td class="td-date"><?php echo date('d M Y', strtotime($r['tgl_setor'])); ?></td>
-                                        <td><span class="badge-jenis <?php echo $kategori_class; ?>"><?php echo htmlspecialchars($r['nama_sampah']); ?></span></td>
-                                        <td class="td-berat"><?php echo number_format($r['berat'], 1); ?> Kg</td>
-                                        <td class="td-poin">+ <?php echo number_format($r['poin'], 0, ',', '.'); ?></td>
-                                        <td><span class="badge-status <?php echo $is_claimed ? 'selesai' : ''; ?>"><?php echo $is_claimed ? '● Selesai' : '○ Pending'; ?></span></td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="6" style="text-align: center; padding: 20px;">Belum ada riwayat setoran.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
-
-            <!-- ── RIGHT COLUMN ── -->
-            <div class="col-right">
-
-                <!-- Jumlah Penukaran Voucher -->
-                <div class="card stat-card">
-                    <p class="stat-card-label">JUMLAH PENUKARAN VOUCHER</p>
-                    <div class="voucher-big-num">
-                        <?php echo number_format($total_penukaran, 0, ',', '.'); ?>
-                    </div>
-                    <p class="voucher-sub-label">Penukaran berhasil</p>
-                    <div class="voucher-list">
-                        <?php if(mysqli_num_rows($voucher_result) > 0): ?>
-                            <?php while($v = mysqli_fetch_assoc($voucher_result)): ?>
-                            <div class="voucher-item">
-                                <span class="voucher-name"><?php echo htmlspecialchars($v['nama_voucher'] ?? ''); ?></span>
-                                <span class="voucher-badge aktif">Aktif</span>
-                            </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <div class="voucher-item"><span class="voucher-name">Belum ada penukaran</span></div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-
-            </div>
-
-        </div>
-
-
         <!-- ── KATALOG PENUKARAN HADIAH ── -->
-        <section class="katalog-section">
+        <section class="katalog-section" style="margin-bottom: 24px;">
             <div class="katalog-header">
                 <h2 class="katalog-title">Katalog Penukaran Hadiah</h2>
                 <a href="tukar_poin.php" class="link-green">Lihat semua hadiah →</a>
@@ -271,6 +186,74 @@ $catalog_result = mysqli_query($conn, $query_catalog);
                 <?php endif; ?>
             </div>
         </section>
+
+        <!-- ── JUMLAH PENUKARAN VOUCHER ── -->
+        <div class="card stat-card" style="margin-bottom: 24px;">
+            <p class="stat-card-label">JUMLAH PENUKARAN VOUCHER</p>
+            <div class="voucher-big-num">
+                <?php echo number_format($total_penukaran, 0, ',', '.'); ?>
+            </div>
+            <p class="voucher-sub-label">Penukaran berhasil</p>
+            <div class="voucher-list">
+                <?php if(mysqli_num_rows($voucher_result) > 0): ?>
+                    <?php while($v = mysqli_fetch_assoc($voucher_result)): ?>
+                    <div class="voucher-item">
+                        <span class="voucher-name"><?php echo htmlspecialchars($v['nama_voucher'] ?? ''); ?></span>
+                        <span class="voucher-badge aktif">Aktif</span>
+                    </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="voucher-item"><span class="voucher-name">Belum ada penukaran</span></div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- ── RIWAYAT SETORAN TERBARU ── -->
+        <div class="card riwayat-card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h2 class="card-title">Riwayat Setoran Terbaru</h2>
+                <a href="riwayat_user.php" class="link-arrow">
+                    Lihat semua riwayat
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+            </div>
+
+            <div class="table-wrap">
+                <table class="riwayat-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>TANGGAL</th>
+                            <th>JENIS SAMPAH</th>
+                            <th>BERAT</th>
+                            <th>POIN DITERIMA</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(mysqli_num_rows($riwayat_result) > 0): ?>
+                            <?php while($r = mysqli_fetch_assoc($riwayat_result)): 
+                                $kategori_class = strtolower(explode(' ', $r['nama_sampah'] ?? 'plastik')[0]);
+                                $is_claimed = $r['status'] === 'claimed';
+                            ?>
+                            <tr>
+                                <td class="td-id">#S-<?php echo str_pad($r['id_setor'], 4, '0', STR_PAD_LEFT); ?></td>
+                                <td class="td-date"><?php echo date('d M Y', strtotime($r['tgl_setor'])); ?></td>
+                                <td><span class="badge-jenis <?php echo $kategori_class; ?>"><?php echo htmlspecialchars($r['nama_sampah']); ?></span></td>
+                                <td class="td-berat"><?php echo number_format($r['berat'], 1); ?> Kg</td>
+                                <td class="td-poin">+ <?php echo number_format($r['poin'], 0, ',', '.'); ?></td>
+                                <td><span class="badge-status <?php echo $is_claimed ? 'selesai' : ''; ?>"><?php echo $is_claimed ? '● Selesai' : '○ Pending'; ?></span></td>
+                            </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px;">Belum ada riwayat setoran.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
     </div>
 </main>

@@ -26,7 +26,6 @@
                     </span>
                     Kelola Nasabah
                 </a>
-                <span class="badge">248</span>
             </li>
             <li class="nav-item <?php echo (isset($active_page) && $active_page == 'kategori') ? 'active' : ''; ?>">
                 <a href="kategori_sampah.php" class="nav-link">
@@ -43,7 +42,6 @@
                     </span>
                     Transaksi Setoran
                 </a>
-                <span class="badge">12</span>
             </li>
             <li class="nav-item <?php echo (isset($active_page) && $active_page == 'reward') ? 'active' : ''; ?>">
                 <a href="kelola_reward.php" class="nav-link">

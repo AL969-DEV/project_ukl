@@ -46,13 +46,6 @@ while($row = mysqli_fetch_assoc($result_status_count)) {
     }
 }
 
-// Get categories list for filter dropdown
-$q_cats = mysqli_query($conn, "SELECT nama_sampah FROM kategori_sampah ORDER BY nama_sampah ASC");
-$categories = [];
-while ($row_cat = mysqli_fetch_assoc($q_cats)) {
-    $categories[] = $row_cat['nama_sampah'];
-}
-
 // Transaction data query (all transactions for client-side filtering)
 $query_trx = "SELECT ts.*, n.nama_lengkap, n.id_nasabah, ks.nama_sampah, ks.poin_per_kg 
               FROM transaksi_setor ts
@@ -159,65 +152,6 @@ $result = mysqli_query($conn, $query_trx);
             <!-- ── Table Panel ── -->
             <div class="ts-table-panel">
 
-                <!-- Toolbar Row 1 -->
-                <div class="ts-toolbar">
-                    <div class="ts-search-wrap">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9CA3AF" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
-                        <input type="text" class="search-input" id="searchInput" placeholder="Cari nama nasabah, ID transaksi..." autocomplete="off">
-                    </div>
-
-                    <!-- Filter: Kategori -->
-                    <div class="ts-filter-wrap">
-                        <select class="ts-filter-select" id="categoryFilter">
-                            <option>Semua Kategori</option>
-                            <?php foreach ($categories as $cat): ?>
-                                <option><?php echo htmlspecialchars($cat); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <svg class="ts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-
-                    <!-- Filter: Status -->
-                    <div class="ts-filter-wrap">
-                        <select class="ts-filter-select" id="statusFilter">
-                            <option>Semua Status</option>
-                            <option>Selesai</option>
-                            <option>Diproses</option>
-                            <option>Pending</option>
-                            <option>Ditolak</option>
-                        </select>
-                        <svg class="ts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-
-                    <!-- Date range -->
-                    <div class="ts-date-input">
-                        <input type="date" class="ts-date-field" id="startDate" placeholder="Mulai Tanggal">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.8"/><path d="M3 10h18M8 2v4M16 2v4" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    </div>
-
-                    <div class="ts-date-input">
-                        <input type="date" class="ts-date-field" id="endDate" placeholder="Sampai Tanggal">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.8"/><path d="M3 10h18M8 2v4M16 2v4" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    </div>
-                </div>
-
-                <!-- Toolbar Row 2 -->
-                <div class="ts-toolbar-row2">
-                    <div class="ts-filter-wrap">
-                        <select class="ts-filter-select" id="sortBy">
-                            <option>Terbaru Pertama</option>
-                            <option>Terlama Pertama</option>
-                            <option>Poin Terbanyak</option>
-                            <option>Berat Terbesar</option>
-                        </select>
-                        <svg class="ts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-                    <button class="ts-btn-reset" id="resetBtn">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        Reset Filter
-                    </button>
-                </div>
-
                 <!-- Table -->
                 <div class="table-wrapper">
                     <table class="data-table ts-table">
@@ -317,98 +251,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.querySelector('.ts-table tbody');
     const allRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
     
-    // Elements
-    const searchInput = document.getElementById('searchInput');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
-    const sortBySelect = document.getElementById('sortBy');
-    const resetBtn = document.getElementById('resetBtn');
     const tableInfo = document.querySelector('.table-info');
     const paginationDiv = document.querySelector('.table-footer .pagination');
 
-    // Clear initial date values
-    startDateInput.value = '';
-    endDateInput.value = '';
-
-    // Create empty row
-    const emptyRow = document.createElement('tr');
-    emptyRow.id = 'searchEmptyRow';
-    emptyRow.style.display = 'none';
-    emptyRow.innerHTML = '<td colspan="8" style="text-align: center; padding: 20px;">Tidak ada transaksi yang cocok dengan filter.</td>';
-    tableBody.appendChild(emptyRow);
-
     function updateTable() {
-        const query = searchInput.value.toLowerCase().trim();
-        const category = categoryFilter.value;
-        const status = statusFilter.value.toLowerCase();
-        const startDate = startDateInput.value;
-        const endDate = endDateInput.value;
-        const sortBy = sortBySelect.value;
-
-        // 1. Filter
-        let filteredRows = allRows.filter(row => {
-            // Search filter
-            const trxId = row.getAttribute('data-id').toLowerCase();
-            const nasabahName = row.getAttribute('data-nasabah').toLowerCase();
-            const matchesSearch = trxId.includes(query) || nasabahName.includes(query);
-
-            // Kategori filter
-            const rowKategori = row.getAttribute('data-kategori');
-            const matchesKategori = (category === 'Semua Kategori' || rowKategori === category);
-
-            // Status filter
-            const rowStatus = row.getAttribute('data-status').toLowerCase();
-            let matchesStatus = true;
-            if (status !== 'semua status') {
-                matchesStatus = (rowStatus === status);
-            }
-
-            // Date filter
-            const rowDateStr = row.getAttribute('data-date').split(' ')[0]; // YYYY-MM-DD
-            let matchesDate = true;
-            if (startDate) {
-                matchesDate = matchesDate && (rowDateStr >= startDate);
-            }
-            if (endDate) {
-                matchesDate = matchesDate && (rowDateStr <= endDate);
-            }
-
-            return matchesSearch && matchesKategori && matchesStatus && matchesDate;
-        });
-
-        // 2. Sort
-        filteredRows.sort((a, b) => {
-            if (sortBy === 'Terbaru Pertama') {
-                return new Date(b.getAttribute('data-date')) - new Date(a.getAttribute('data-date'));
-            } else if (sortBy === 'Terlama Pertama') {
-                return new Date(a.getAttribute('data-date')) - new Date(b.getAttribute('data-date'));
-            } else if (sortBy === 'Poin Terbanyak') {
-                return parseInt(b.getAttribute('data-poin')) - parseInt(a.getAttribute('data-poin'));
-            } else if (sortBy === 'Berat Terbesar') {
-                return parseFloat(b.getAttribute('data-berat')) - parseFloat(a.getAttribute('data-berat'));
-            }
-            return 0;
-        });
-
-        // Re-append sorted rows to the DOM
-        filteredRows.forEach(row => tableBody.appendChild(row));
-        tableBody.appendChild(emptyRow); // keep empty row at the bottom
-
-        const totalItems = filteredRows.length;
+        const totalItems = allRows.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        // Adjust page
         if (currentPage > totalPages) currentPage = totalPages || 1;
         if (currentPage < 1) currentPage = 1;
 
-        // Hide all
         allRows.forEach(row => row.style.display = 'none');
-        emptyRow.style.display = 'none';
 
         if (totalItems === 0) {
-            emptyRow.style.display = '';
             tableInfo.innerHTML = 'Menampilkan <strong>0</strong> - <strong>0</strong> dari <strong>0</strong> transaksi';
             paginationDiv.innerHTML = '';
             return;
@@ -417,15 +272,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
-        // Show page items
         for (let i = startIndex; i < endIndex; i++) {
-            filteredRows[i].style.display = '';
+            allRows[i].style.display = '';
         }
 
-        // Info text
         tableInfo.innerHTML = `Menampilkan transaksi <strong>${startIndex + 1}–${endIndex}</strong> dari total <strong>${totalItems}</strong>`;
-
-        // Pagination buttons
         renderPagination(totalPages);
     }
 
@@ -499,38 +350,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    // Event listeners
-    const headerSearch = document.querySelector('.top-header .search-input');
-    if (headerSearch) {
-        headerSearch.addEventListener('input', function() {
-            searchInput.value = this.value;
-            currentPage = 1;
-            updateTable();
-        });
-        searchInput.addEventListener('input', function() {
-            headerSearch.value = this.value;
-        });
-    }
-
-    searchInput.addEventListener('input', () => { currentPage = 1; updateTable(); });
-    categoryFilter.addEventListener('change', () => { currentPage = 1; updateTable(); });
-    statusFilter.addEventListener('change', () => { currentPage = 1; updateTable(); });
-    startDateInput.addEventListener('change', () => { currentPage = 1; updateTable(); });
-    endDateInput.addEventListener('change', () => { currentPage = 1; updateTable(); });
-    sortBySelect.addEventListener('change', () => { currentPage = 1; updateTable(); });
-
-    resetBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        if (headerSearch) headerSearch.value = '';
-        categoryFilter.selectedIndex = 0;
-        statusFilter.selectedIndex = 0;
-        startDateInput.value = '';
-        endDateInput.value = '';
-        sortBySelect.selectedIndex = 0;
-        currentPage = 1;
-        updateTable();
-    });
 
     // Initial load
     updateTable();

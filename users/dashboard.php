@@ -29,105 +29,59 @@ $catalog_result = mysqli_query($conn, $query_catalog);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/navbar_user.css">
     <link rel="stylesheet" href="../css/dashboard_user.css">
+    <link rel="stylesheet" href="../css/landing_page.css">
     <link rel="stylesheet" href="../css/footer_user.css">
 </head>
 <body>
 
 <?php include '../includes/navbar_user.php'; ?>
 
-<section class="hero-section">
-    <div class="hero-inner">
-        <div class="hero-left">
-            <p class="hero-greeting">Halo, <?php echo htmlspecialchars(explode(' ', $nama_user)[0]); ?>! Selamat datang.</p>
-            <h1 class="hero-poin">
-                Poin Kamu: <span class="hero-poin-value">0</span>
-            </h1>
-            <div class="hero-meta">
-                <span class="hero-meta-badge"><?php echo $level; ?></span>
-                <span class="hero-meta-sep">•</span>
-                <span><?php echo $hari_ini; ?></span>
-            </div>
-        </div>
-        <div class="hero-right">
-            <button class="btn-scan-qr" onclick="showUnregisteredAlert()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <rect x="7" y="7" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5"/>
-                    <rect x="13" y="7" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5"/>
-                    <rect x="7" y="13" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5"/>
-                    <rect x="13" y="13" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
-                Scan QR Code
-            </button>
-            <p class="hero-scan-sub">Klaim poin setoran dengan scan QR</p>
+<section class="landing-hero">
+    <div class="container">
+        <h1>Selamat Datang di SolusiSampah!</h1>
+        <p>SolusiSampah adalah platform digital untuk membantu Anda mengelola sampah dengan baik. Anda dapat menyetorkan sampah anorganik seperti plastik, kertas, logam, dan kaca, lalu mendapatkan poin yang bisa ditukarkan dengan berbagai hadiah menarik.</p>
+        
+        <div class="akun-box">
+            <h3>Detail Akun Anda</h3>
+            <p><strong>Nama Lengkap:</strong> <?php echo htmlspecialchars($nama_user); ?></p>
+            <p><strong>Username:</strong> <?php echo htmlspecialchars($_SESSION['username'] ?? '-'); ?></p>
+            <p><strong>ID Akun:</strong> <?php echo htmlspecialchars($id_account); ?></p>
+            <p><strong>Status Akun:</strong> <span style="color: red; font-weight: bold;">Belum Aktif (Calon Nasabah)</span></p>
         </div>
     </div>
 </section>
 
 <main class="main-content">
     <div class="container">
-        <div class="content-grid">
 
-            <!-- ── LEFT COLUMN ── -->
-            <div class="col-left">
-
-                <!-- Riwayat Setoran Terbaru -->
-                <div class="card riwayat-card">
-                    <div class="card-header">
-                        <h2 class="card-title">Riwayat Setoran Terbaru</h2>
-                        <a href="#" onclick="showUnregisteredAlert(); return false;" class="link-arrow">
-                            Lihat semua riwayat
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </a>
-                    </div>
-
-                    <div class="table-wrap">
-                        <table class="riwayat-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>TANGGAL</th>
-                                    <th>JENIS SAMPAH</th>
-                                    <th>BERAT</th>
-                                    <th>POIN DITERIMA</th>
-                                    <th>STATUS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 20px;">Belum ada riwayat setoran.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
+        <h2 class="section-title">Cara Kerja SolusiSampah</h2>
+        <div class="cara-daftar-list">
+            <p style="margin-bottom: 10px; font-weight: bold;">Untuk bisa mulai menyetorkan sampah dan mengumpulkan poin, silakan ikuti langkah berikut:</p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <tr>
+                    <td style="width: 30px; vertical-align: top; font-weight: bold; color: #2d9e5c;">1.</td>
+                    <td style="padding-bottom: 10px;"><strong>Bawa Akun Anda ke Petugas:</strong> Temui petugas Bank Sampah terdekat dan tunjukkan nama atau ID akun Anda di atas.</td>
+                </tr>
+                <tr>
+                    <td style="width: 30px; vertical-align: top; font-weight: bold; color: #2d9e5c;">2.</td>
+                    <td style="padding-bottom: 10px;"><strong>Petugas Melakukan Aktivasi:</strong> Petugas akan mengaktifkan akun Anda menjadi status <em>Nasabah Aktif</em>.</td>
+                </tr>
+                <tr>
+                    <td style="width: 30px; vertical-align: top; font-weight: bold; color: #2d9e5c;">3.</td>
+                    <td style="padding-bottom: 10px;"><strong>Setor Sampah & Dapatkan Poin:</strong> Setelah aktif, Anda bisa menyetorkan sampah anorganik ke petugas dan klaim poin setoran melalui scan QR code.</td>
+                </tr>
+            </table>
+            
+            <div class="info-pendaftaran">
+                <strong>Pemberitahuan:</strong> Selama akun Anda belum diaktifkan oleh petugas, menu Tukar Poin dan Riwayat Setoran belum bisa digunakan. Silakan hubungi petugas Bank Sampah terdekat terlebih dahulu.
             </div>
-
-
-            <!-- ── RIGHT COLUMN ── -->
-            <div class="col-right">
-
-                <!-- Jumlah Penukaran Voucher -->
-                <div class="card stat-card">
-                    <p class="stat-card-label">JUMLAH PENUKARAN VOUCHER</p>
-                    <div class="voucher-big-num">0</div>
-                    <p class="voucher-sub-label">Penukaran berhasil</p>
-                    <div class="voucher-list">
-                        <div class="voucher-item"><span class="voucher-name">Belum ada penukaran</span></div>
-                    </div>
-                </div>
-
-            </div>
-
         </div>
 
-
-        <!-- ── KATALOG PENUKARAN HADIAH ── -->
-        <section class="katalog-section">
+        <h2 class="section-title">Katalog Hadiah</h2>
+        <section class="katalog-section" style="margin-bottom: 24px;">
             <div class="katalog-header">
-                <h2 class="katalog-title">Katalog Penukaran Hadiah</h2>
-                <a href="#" onclick="showUnregisteredAlert(); return false;" class="link-green">Lihat semua hadiah →</a>
+                <h2 class="katalog-title" style="margin-top: 0;">Daftar Hadiah yang Bisa Ditukarkan</h2>
+                <a href="#" onclick="showUnregisteredAlert(); return false;" class="link-green">Lihat Semua →</a>
             </div>
 
             <div class="katalog-grid">

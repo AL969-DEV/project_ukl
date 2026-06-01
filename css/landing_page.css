@@ -1,0 +1,85 @@
+/* Styling sederhana untuk landing page Calon Nasabah */
+
+.landing-hero {
+    background-color: #2d9e5c;
+    color: #ffffff;
+    padding: 30px 20px;
+    text-align: center;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.landing-hero h1 {
+    font-size: 26px;
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.landing-hero p {
+    font-size: 14px;
+    margin-bottom: 20px;
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+
+.akun-box {
+    background-color: #ffffff;
+    color: #333333;
+    padding: 15px 20px;
+    border-radius: 6px;
+    max-width: 350px;
+    margin: 0 auto;
+    border: 1px solid #cccccc;
+    text-align: left;
+}
+
+.akun-box h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #2d9e5c;
+    padding-bottom: 6px;
+    color: #2d9e5c;
+    font-size: 16px;
+}
+
+.akun-box p {
+    margin: 8px 0;
+    font-size: 13px;
+}
+
+/* Section Cara Kerja & Pendaftaran */
+.section-title {
+    font-size: 18px;
+    color: #333333;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    border-left: 4px solid #2d9e5c;
+    padding-left: 8px;
+    font-weight: 700;
+}
+
+.cara-daftar-list {
+    background-color: #ffffff;
+    padding: 20px;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.cara-daftar-list li {
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.info-pendaftaran {
+    background-color: #e8f5e8;
+    border: 1px solid #2d9e5c;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.4;
+}
